@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -25,18 +25,25 @@ interface MarkdownEditorProps {
   initialContent?: string;
   className?: string;
   onSave?: (content: string) => void;
+  activeTab?: "edit" | "preview";
 }
 
 export function MarkdownEditor({
   initialContent = "",
   className,
   onSave,
+  activeTab = "edit",
 }: MarkdownEditorProps) {
   const [content, setContent] = useState(initialContent);
-  const [activeTab, setActiveTab] = useState<string>("edit");
+  const [internalActiveTab, setInternalActiveTab] = useState<string>(activeTab);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [filename, setFilename] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update internal tab when external activeTab changes
+  useEffect(() => {
+    setInternalActiveTab(activeTab);
+  }, [activeTab]);
 
   // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,18 +107,20 @@ export function MarkdownEditor({
         <CardContent>
           <Tabs
             defaultValue="edit"
-            value={activeTab}
-            onValueChange={setActiveTab}
+            value={internalActiveTab}
+            onValueChange={setInternalActiveTab}
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="edit" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Edit
+                <span className="text-xs text-muted-foreground">(E)</span>
               </TabsTrigger>
               <TabsTrigger value="preview" className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
                 Preview
+                <span className="text-xs text-muted-foreground">(P)</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="edit" className="mt-4">
