@@ -23,7 +23,12 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getShareableUrl, getCompressionStats } from "@/lib/compression";
+import {
+  getShareableUrl,
+  getCompressionStats,
+  decompressContent,
+  isCompressedContent,
+} from "@/lib/compression";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -131,12 +136,38 @@ function HomeContent({
   const searchParams = useSearchParams();
   const contentParam = searchParams.get("content");
 
-  const [markdown, setMarkdown] = useState(contentParam || SAMPLE_MARKDOWN);
+  // Helper function to decode content parameter (handles both compressed and raw content)
+  const decodeContentParam = (param: string | null): string => {
+    if (!param) return SAMPLE_MARKDOWN;
+
+    try {
+      // Check if the content is compressed
+      if (isCompressedContent(param)) {
+        // Decompress the content
+        const decompressed = decompressContent(param);
+        console.log("Content decompressed successfully from URL parameter");
+        return decompressed;
+      } else {
+        // Content is raw, use as-is
+        console.log("Using raw content from URL parameter");
+        return param;
+      }
+    } catch (error) {
+      console.error("Error decoding content parameter:", error);
+      // Fallback to sample markdown if decoding fails
+      return SAMPLE_MARKDOWN;
+    }
+  };
+
+  const [markdown, setMarkdown] = useState(decodeContentParam(contentParam));
 
   // Update markdown when contentParam changes
   useEffect(() => {
     if (contentParam) {
-      setMarkdown(contentParam);
+      const decodedContent = decodeContentParam(contentParam);
+      setMarkdown(decodedContent);
+      onViewModeChange("fullscreen");
+      onActiveTabChange("preview");
     }
   }, [contentParam]);
 
@@ -250,7 +281,7 @@ export default function Home() {
       .then(() => {
         console.log("Shareable URL copied to clipboard:", shareableUrl);
         console.log("Compression stats:", stats);
-        
+
         // Store the last shared URL for display
         setLastSharedUrl(shareableUrl);
 
@@ -259,29 +290,25 @@ export default function Home() {
           toast.success(
             `URL copied! Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`,
             {
-              description: "Share this URL to let others view your markdown content",
+              description:
+                "Share this URL to let others view your markdown content",
               duration: 4000,
-            }
+            },
           );
         } else {
-          toast.success(
-            "URL copied to clipboard!",
-            {
-              description: "Share this URL to let others view your markdown content",
-              duration: 3000,
-            }
-          );
+          toast.success("URL copied to clipboard!", {
+            description:
+              "Share this URL to let others view your markdown content",
+            duration: 3000,
+          });
         }
       })
       .catch((err) => {
         console.error("Failed to copy URL:", err);
-        toast.error(
-          "Failed to copy URL to clipboard",
-          {
-            description: "Please try again or copy the URL manually",
-            duration: 4000,
-          }
-        );
+        toast.error("Failed to copy URL to clipboard", {
+          description: "Please try again or copy the URL manually",
+          duration: 4000,
+        });
       })
       .finally(() => {
         setIsSharing(false);
@@ -534,7 +561,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <div className="max-w-md">
-                <code 
+                <code
                   className="text-xs bg-green-100 px-2 py-1 rounded text-green-700 block truncate"
                   title={lastSharedUrl}
                 >
@@ -632,7 +659,7 @@ export default function Home() {
                 variant="outline"
                 onClick={() => {
                   if (lastSharedUrl) {
-                    window.open(lastSharedUrl, '_blank');
+                    window.open(lastSharedUrl, "_blank");
                   }
                 }}
                 className="flex-1"
