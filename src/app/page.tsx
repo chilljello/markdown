@@ -19,11 +19,20 @@ import {
   Check,
   Share2,
   Eye,
+  ExternalLink,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getShareableUrl, getCompressionStats } from "@/lib/compression";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 // Sample markdown with Mermaid diagram for demonstration
 const SAMPLE_MARKDOWN = `# Markdown Mermaid Viewer
@@ -210,6 +219,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [isDragOver, setIsDragOver] = useState(false);
   const [showFullscreenMessage, setShowFullscreenMessage] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [lastSharedUrl, setLastSharedUrl] = useState<string | null>(null);
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -229,6 +241,7 @@ export default function Home() {
 
   // Generate shareable URL with gzip compression
   const handleShare = useCallback(() => {
+    setIsSharing(true);
     const shareableUrl = getShareableUrl(currentMarkdown);
     const stats = getCompressionStats(currentMarkdown);
 
@@ -237,16 +250,41 @@ export default function Home() {
       .then(() => {
         console.log("Shareable URL copied to clipboard:", shareableUrl);
         console.log("Compression stats:", stats);
+        
+        // Store the last shared URL for display
+        setLastSharedUrl(shareableUrl);
 
-        // You could add a toast notification here showing compression ratio
+        // Show success toast with compression info
         if (stats.shouldCompress) {
-          console.log(
-            `Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`,
+          toast.success(
+            `URL copied! Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`,
+            {
+              description: "Share this URL to let others view your markdown content",
+              duration: 4000,
+            }
+          );
+        } else {
+          toast.success(
+            "URL copied to clipboard!",
+            {
+              description: "Share this URL to let others view your markdown content",
+              duration: 3000,
+            }
           );
         }
       })
       .catch((err) => {
         console.error("Failed to copy URL:", err);
+        toast.error(
+          "Failed to copy URL to clipboard",
+          {
+            description: "Please try again or copy the URL manually",
+            duration: 4000,
+          }
+        );
+      })
+      .finally(() => {
+        setIsSharing(false);
       });
   }, [currentMarkdown]);
 
@@ -422,9 +460,33 @@ export default function Home() {
               size="sm"
               onClick={handleShare}
               className="flex items-center gap-2"
+              disabled={isSharing}
             >
-              <Share2 className="h-4 w-4" />
-              Share
+              {isSharing ? (
+                <svg
+                  className="animate-spin h-4 w-4 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                <Share2 className="h-4 w-4" />
+              )}
+              {isSharing ? "Sharing..." : "Share"}
             </Button>
             <Button
               variant={viewMode === "split" ? "default" : "outline"}
@@ -462,6 +524,58 @@ export default function Home() {
         </div>
       )}
 
+      {/* Last Shared URL Display */}
+      {lastSharedUrl && (
+        <div className="bg-green-50 border-b border-green-200 px-4 py-2">
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-green-800">
+              <Share2 className="h-4 w-4" />
+              <span>Last shared URL:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="max-w-md">
+                <code 
+                  className="text-xs bg-green-100 px-2 py-1 rounded text-green-700 block truncate"
+                  title={lastSharedUrl}
+                >
+                  {lastSharedUrl}
+                </code>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(lastSharedUrl);
+                  toast.success("URL copied to clipboard!");
+                }}
+                className="h-6 px-2 py-1 text-green-600 hover:text-green-800 text-xs"
+                title="Copy URL to clipboard"
+              >
+                Copy
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowUrlDialog(true)}
+                className="h-6 px-2 py-1 text-green-600 hover:text-green-800 text-xs"
+                title="View full URL"
+              >
+                <Eye className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLastSharedUrl(null)}
+                className="h-6 w-6 p-0 text-green-600 hover:text-green-800"
+                title="Hide URL display"
+              >
+                ×
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Suspense
         fallback={
           <div className="flex-1 flex items-center justify-center">
@@ -485,6 +599,56 @@ export default function Home() {
           </div>
         </footer>
       )}
+
+      {/* URL Dialog */}
+      <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Shared URL</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                URL to share:
+              </label>
+              <div className="mt-2 p-3 bg-muted rounded-md">
+                <code className="text-sm break-all">{lastSharedUrl}</code>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (lastSharedUrl) {
+                    navigator.clipboard.writeText(lastSharedUrl);
+                    toast.success("URL copied to clipboard!");
+                  }
+                }}
+                className="flex-1"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy URL
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (lastSharedUrl) {
+                    window.open(lastSharedUrl, '_blank');
+                  }
+                }}
+                className="flex-1"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open URL
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
