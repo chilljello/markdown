@@ -96,7 +96,6 @@ export function MarkdownEditor({
     <>
       <Card className={cn("w-full", className)}>
         <CardHeader>
-          <CardTitle>Markdown Editor</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs
