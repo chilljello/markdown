@@ -2,7 +2,7 @@
 
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { MarkdownViewer } from "@/components/markdown-viewer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ResizableHandle,
@@ -94,7 +94,7 @@ classDiagram
 4. Import or export your work using the buttons below
 `;
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const contentParam = searchParams.get("content");
   
@@ -107,6 +107,50 @@ export default function Home() {
     }
   }, [contentParam]);
   
+  return (
+    <div className="mx-auto container py-6 flex-1">
+      <Tabs defaultValue="fullscreen" className="w-full">
+        <TabsList className="grid w-80 grid-cols-2 mb-4">
+          <TabsTrigger value="edit-preview">Split View</TabsTrigger>
+          <TabsTrigger value="fullscreen">Full Screen</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="edit-preview" className="w-full">
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="min-h-[600px] rounded-lg border"
+          >
+            <ResizablePanel defaultSize={50}>
+              <MarkdownEditor
+                initialContent={markdown}
+                onSave={setMarkdown}
+                className="border-0 rounded-none h-full"
+              />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={50}>
+              <div className="h-full p-6">
+                <MarkdownViewer content={markdown} className="h-full w-full" />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </TabsContent>
+        
+        <TabsContent value="fullscreen" className="w-full">
+          <div className="rounded-lg border">
+            <MarkdownEditor
+              initialContent={markdown}
+              onSave={setMarkdown}
+              className="border-0 rounded-none"
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export default function Home() {
   return (
     <main className="flex min-h-screen flex-col">
       <header className="border-b">
@@ -141,45 +185,9 @@ export default function Home() {
         </div>
       </header>
       
-      <div className="mx-auto container py-6 flex-1">
-        <Tabs defaultValue="fullscreen" className="w-full">
-          <TabsList className="grid w-80 grid-cols-2 mb-4">
-            <TabsTrigger value="edit-preview">Split View</TabsTrigger>
-            <TabsTrigger value="fullscreen">Full Screen</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="edit-preview" className="w-full">
-            <ResizablePanelGroup
-              direction="horizontal"
-              className="min-h-[600px] rounded-lg border"
-            >
-              <ResizablePanel defaultSize={50}>
-                <MarkdownEditor
-                  initialContent={markdown}
-                  onSave={setMarkdown}
-                  className="border-0 rounded-none h-full"
-                />
-              </ResizablePanel>
-              <ResizableHandle />
-              <ResizablePanel defaultSize={50}>
-                <div className="h-full p-6">
-                  <MarkdownViewer content={markdown} className="h-full w-full" />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </TabsContent>
-          
-          <TabsContent value="fullscreen" className="w-full">
-            <div className="rounded-lg border">
-              <MarkdownEditor
-                initialContent={markdown}
-                onSave={setMarkdown}
-                className="border-0 rounded-none"
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+      <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading...</div>}>
+        <HomeContent />
+      </Suspense>
       
       <footer className="py-6 border-t">
         <div className="container px-4 text-center text-sm text-muted-foreground">

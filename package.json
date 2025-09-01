@@ -2,11 +2,15 @@
   "name": "markdown-mermaid-viewer",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "bunx --bun next dev --turbopack",
+    "build": "bunx --bun next build",
+    "start": "bunx --bun next start",
+    "lint": "bunx --bun next lint",
+    "type-check": "bunx --bun tsc --noEmit",
+    "clean": "rm -rf .next out dist",
+    "install-deps": "bun install"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

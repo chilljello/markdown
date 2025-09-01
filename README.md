@@ -1,74 +1,135 @@
 # Markdown Mermaid Viewer
 
-A powerful web application for viewing and editing Markdown files with embedded [Mermaid](https://mermaid.js.org/) diagrams. Built with Next.js and React.
+A modern Next.js application for viewing and editing Markdown content with Mermaid diagram support, optimized for Bun.
 
 ## Features
 
-- **Live Preview**: Write Markdown and see it rendered in real-time
-- **Mermaid Support**: Create and view diagrams directly in your Markdown
-- **Responsive Design**: Works on desktop and mobile devices
-- **GitHub Markdown Style**: Renders with familiar GitHub styling
-- **Import/Export**: Load and save your Markdown files
+- **Markdown Editor**: Rich text editing with syntax highlighting
+- **Mermaid Diagrams**: Support for various diagram types (flowcharts, sequence diagrams, class diagrams, etc.)
+- **Real-time Preview**: Split-view editing with live preview
+- **Responsive Design**: Mobile-friendly interface
+- **Theme Support**: Light/dark mode toggle
+- **File Import/Export**: Save and load your Markdown files
 
-## Getting Started
+## Tech Stack
 
-First, install the dependencies:
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Runtime**: Bun (optimized)
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI + shadcn/ui
+- **Markdown**: Marked.js with custom Mermaid processing
+- **Diagrams**: Mermaid.js
 
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
+## Quick Start
+
+### Prerequisites
+
+1. **Install Bun**: Make sure you have Bun installed
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. **Verify Installation**:
+   ```bash
+   bun --version
+   ```
+
+### Development
+
+1. **Install Dependencies**:
+   ```bash
+   bun install
+   ```
+
+2. **Start Development Server**:
+   ```bash
+   bun run dev
+   ```
+
+3. **Open Browser**: Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Production Build
+
+1. **Build the Application**:
+   ```bash
+   bun run build
+   ```
+
+2. **Start Production Server**:
+   ```bash
+   bun run start
+   ```
+
+## Available Scripts
+
+- `bun run dev` - Start development server with Turbopack
+- `bun run build` - Build for production
+- `bun run start` - Start production server
+- `bun run lint` - Run ESLint
+- `bun run type-check` - Run TypeScript type checking
+- `bun run clean` - Clean build artifacts
+- `bun run install-deps` - Install dependencies using Bun
+
+## Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router pages
+├── components/          # React components
+│   ├── ui/             # shadcn/ui components
+│   ├── doc-viewer.tsx  # Document viewer component
+│   ├── docs-sidebar.tsx # Documentation sidebar
+│   ├── markdown-editor.tsx # Markdown editor
+│   └── markdown-viewer.tsx # Markdown renderer with Mermaid
+├── hooks/               # Custom React hooks
+├── lib/                 # Utility functions
+└── actions/             # Server actions
 ```
 
-Then, run the development server:
+## Mermaid Diagram Support
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+The application supports various Mermaid diagram types:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+- **Flowcharts**: `graph TD`, `flowchart LR`
+- **Sequence Diagrams**: `sequenceDiagram`
+- **Class Diagrams**: `classDiagram`
+- **Gantt Charts**: `gantt`
+- **And more...**
 
-## How to Use
-
-1. Write or paste your Markdown content in the editor panel
-2. View the rendered output in the preview panel
-3. Mermaid diagrams will automatically render when enclosed in ````mermaid` code blocks
-4. Use the tab switcher to focus on either editing or viewing
-5. Import or export your content using the provided buttons
-
-## Example Mermaid Usage
+### Example
 
 ```markdown
-# My Document
-
-Here's a flowchart:
-
 ```mermaid
 graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
-    D --> B
-    C --> E[Continue]
-```
+    A[Start] --> B{Decision?}
+    B -->|Yes| C[Continue]
+    B -->|No| D[Stop]
 ```
 
-## Technologies Used
+## Configuration Files
 
-- [Next.js](https://nextjs.org/) - React framework
-- [React](https://reactjs.org/) - UI library
-- [Mermaid](https://mermaid.js.org/) - Diagramming and charting tool
-- [Marked](https://marked.js.org/) - Markdown parser
-- [DOMPurify](https://github.com/cure53/DOMPurify) - XSS sanitizer
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- [shadcn/ui](https://ui.shadcn.com/) - UI component library
+- `bunfig.toml` - Bun configuration
+- `.bunrc` - Additional Bun runtime settings
+- `next.config.ts` - Next.js configuration
+- `tsconfig.json` - TypeScript configuration
+
+## Benefits of Using Bun
+
+- **Faster Package Installation**: Significantly faster than npm/yarn
+- **Improved Build Performance**: Better TypeScript compilation
+- **Memory Efficiency**: Lower memory usage during development
+- **Native TypeScript Support**: Built-in TypeScript support
+- **Full Compatibility**: Works with existing Node.js ecosystem
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and type checking
+5. Submit a pull request
 
 ## License
 
-This project is open-source and available under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).

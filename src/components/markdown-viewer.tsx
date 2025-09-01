@@ -22,6 +22,7 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const [processedHtml, setProcessedHtml] = React.useState<string>("");
 
     // Function to sanitize mermaid code blocks to prevent parsing issues
     const sanitizeMermaidCode = (code: string): string => {
@@ -38,10 +39,10 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     };
 
     // Function to process markdown with custom mermaid handling
-    const processMarkdown = () => {
+    const processMarkdown = async () => {
         try {
             // Import marked dynamically to avoid TypeScript issues
-            const { marked } = require('marked');
+            const { marked } = await import('marked');
 
             // Replace mermaid code blocks with special divs before rendering
             const processedContent = content.replace(
@@ -53,7 +54,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 }
             );
             // Convert markdown to HTML
-            const html = marked(processedContent);
+            const html = await marked(processedContent);
             // Sanitize HTML but keep the mermaid divs
             return DOMPurify.sanitize(html);
         } catch (error) {
@@ -62,9 +63,14 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         }
     };
 
+    // Process markdown when content changes
+    useEffect(() => {
+        processMarkdown().then(setProcessedHtml);
+    }, [content]);
+
     // Render mermaid diagrams after component updates
     useEffect(() => {
-        if (containerRef.current) {
+        if (containerRef.current && processedHtml) {
             try {
                 // Allow time for DOM to update
                 setTimeout(() => {
@@ -80,14 +86,14 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 console.error("Error rendering mermaid diagrams:", error);
             }
         }
-    }, [content]);
+    }, [processedHtml]);
 
     return (
         <Card className={cn("p-6 overflow-auto", className)}>
             <div
                 ref={containerRef}
                 className="markdown-body"
-                dangerouslySetInnerHTML={{ __html: processMarkdown() }}
+                dangerouslySetInnerHTML={{ __html: processedHtml }}
             />
         </Card>
     );
