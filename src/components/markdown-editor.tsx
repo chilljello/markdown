@@ -26,6 +26,8 @@ interface MarkdownEditorProps {
   className?: string;
   onSave?: (content: string) => void;
   activeTab?: "edit" | "preview";
+  onViewModeChange?: (mode: "split" | "fullscreen") => void;
+  onActiveTabChange?: (tab: "edit" | "preview") => void;
 }
 
 export function MarkdownEditor({
@@ -33,6 +35,8 @@ export function MarkdownEditor({
   className,
   onSave,
   activeTab = "edit",
+  onViewModeChange,
+  onActiveTabChange,
 }: MarkdownEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [internalActiveTab, setInternalActiveTab] = useState<string>(activeTab);
@@ -45,6 +49,11 @@ export function MarkdownEditor({
     setInternalActiveTab(activeTab);
   }, [activeTab]);
 
+  // Update content when initialContent changes
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
+
   // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,6 +64,19 @@ export function MarkdownEditor({
       const text = event.target?.result;
       if (typeof text === "string") {
         setContent(text);
+        // Notify parent component about the content change
+        if (onSave) {
+          onSave(text);
+        }
+        // Automatically switch to fullscreen mode and preview mode when file is imported
+        if (onViewModeChange) {
+          onViewModeChange("fullscreen");
+        }
+        if (onActiveTabChange) {
+          onActiveTabChange("preview");
+        }
+        // Show success notification
+        toast.success(`File "${file.name}" imported successfully! Switched to fullscreen preview mode.`);
       }
     };
     reader.readAsText(file);
@@ -82,7 +104,10 @@ export function MarkdownEditor({
 
     try {
       setIsSaving(true);
+      console.log("Attempting to save file:", { filename, contentLength: content.length });
+      
       const result = await saveMarkdownFile(content, filename);
+      console.log("Save result:", result);
       
       if (result.success) {
         toast.success(result.message);
@@ -93,7 +118,12 @@ export function MarkdownEditor({
       }
     } catch (error) {
       console.error("Error saving file:", error);
-      toast.error("Failed to save file. Please try again.");
+      console.error("Error details:", {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      toast.error(`Failed to save file: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
     }
@@ -103,6 +133,13 @@ export function MarkdownEditor({
     <>
       <Card className={cn("w-full", className)}>
         <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold">Markdown Editor</CardTitle>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText className="h-4 w-4" />
+              <span>Drop .md files anywhere to load</span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs
@@ -128,7 +165,7 @@ export function MarkdownEditor({
                 <Textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Enter your markdown content here..."
+                  placeholder="Enter your markdown content here... or drag and drop a .md file anywhere on the window"
                   className="min-h-[400px] font-mono"
                 />
               </div>

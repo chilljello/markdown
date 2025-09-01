@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
 import { cn } from "@/lib/utils";
 import mermaid from "mermaid";
@@ -36,7 +36,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     };
 
     // Function to process markdown with custom mermaid handling
-    const processMarkdown = async () => {
+    const processMarkdown = useCallback(async () => {
         try {
             // Import marked dynamically to avoid TypeScript issues
             const { marked } = await import('marked');
@@ -58,10 +58,10 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             console.error("Error processing markdown:", error);
             return "Error processing markdown content";
         }
-    };
+    }, [content]);
 
     // Function to render mermaid diagrams
-    const renderMermaidDiagrams = async () => {
+    const renderMermaidDiagrams = useCallback(async () => {
         if (!containerRef.current) return;
         
         try {
@@ -120,7 +120,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         } catch (error) {
             console.error("Error rendering mermaid diagrams:", error);
         }
-    };
+    }, []);
 
     // Function to add pan and zoom functionality to a Mermaid chart
     const addPanZoomToChart = (svgElement: SVGElement) => {
@@ -235,7 +235,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         });
 
         // Double-click to reset (only active when hovering)
-        wrapper.addEventListener('dblclick', (e) => {
+        wrapper.addEventListener('dblclick', () => {
             if (!isHovering) return;
             
             currentTranslate = { x: 0, y: 0 };
@@ -253,14 +253,14 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     // Process markdown when content changes
     useEffect(() => {
         processMarkdown().then(setProcessedHtml);
-    }, [content]);
+    }, [content, processMarkdown]);
 
     // Render mermaid diagrams after component updates
     useEffect(() => {
         if (processedHtml && containerRef.current) {
             renderMermaidDiagrams();
         }
-    }, [processedHtml]);
+    }, [processedHtml, renderMermaidDiagrams]);
 
     return (
         <Card className={cn("p-6 overflow-auto", className)}>
