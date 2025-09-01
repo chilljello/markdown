@@ -23,6 +23,27 @@ interface MarkdownViewerProps {
 export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [processedHtml, setProcessedHtml] = React.useState<string>("");
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    // Mark component as mounted and cleanup on unmount
+    useEffect(() => {
+        setIsMounted(true);
+        return () => {
+            setIsMounted(false);
+            // Cleanup any existing mermaid wrappers to prevent memory leaks
+            const currentContainer = containerRef.current;
+            if (currentContainer) {
+                const wrappers = currentContainer.querySelectorAll('.mermaid-wrapper');
+                wrappers.forEach(wrapper => {
+                    if (wrapper instanceof HTMLElement) {
+                        // Remove all event listeners by cloning the element
+                        const newWrapper = wrapper.cloneNode(true);
+                        wrapper.parentNode?.replaceChild(newWrapper, wrapper);
+                    }
+                });
+            }
+        };
+    }, []);
 
     // Function to sanitize mermaid code blocks to prevent parsing issues
     const sanitizeMermaidCode = (code: string): string => {
@@ -62,13 +83,23 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
     // Function to render mermaid diagrams
     const renderMermaidDiagrams = useCallback(async () => {
-        if (!containerRef.current) return;
+        // Double-check that the ref is still valid
+        if (!containerRef.current || !isMounted) {
+            console.log('Container ref not ready or component unmounted, skipping mermaid rendering');
+            return;
+        }
         
         try {
             console.log('Attempting to render mermaid diagrams...');
             
             // Wait for DOM to be fully updated
             await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check again after the delay
+            if (!containerRef.current || !isMounted) {
+                console.log('Container ref lost after delay, skipping mermaid rendering');
+                return;
+            }
             
             const mermaidElements = containerRef.current.querySelectorAll('.mermaid');
             console.log(`Found ${mermaidElements.length} mermaid elements`);
@@ -89,14 +120,16 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 // Add pan and zoom functionality after rendering is complete
                 // Use a small delay to ensure DOM is fully updated
                 setTimeout(() => {
-                    const renderedSvgs = containerRef.current?.querySelectorAll('.mermaid svg');
-                    if (renderedSvgs) {
-                        renderedSvgs.forEach((svg) => {
-                            if (svg instanceof SVGElement) {
-                                console.log('Adding pan and zoom to SVG:', svg);
-                                addPanZoomToChart(svg);
-                            }
-                        });
+                    if (containerRef.current && isMounted) {
+                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
+                        if (renderedSvgs) {
+                            renderedSvgs.forEach((svg) => {
+                                if (svg instanceof SVGElement) {
+                                    console.log('Adding pan and zoom to SVG:', svg);
+                                    addPanZoomToChart(svg);
+                                }
+                            });
+                        }
                     }
                 }, 200);
                 
@@ -104,13 +137,15 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 console.error("Error in mermaid.run:", error);
                 // Fallback: try to add pan and zoom to any existing SVGs
                 setTimeout(() => {
-                    const renderedSvgs = containerRef.current?.querySelectorAll('.mermaid svg');
-                    if (renderedSvgs) {
-                        renderedSvgs.forEach((svg) => {
-                            if (svg instanceof SVGElement) {
-                                addPanZoomToChart(svg);
-                            }
-                        });
+                    if (containerRef.current && isMounted) {
+                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
+                        if (renderedSvgs) {
+                            renderedSvgs.forEach((svg) => {
+                                if (svg instanceof SVGElement) {
+                                    addPanZoomToChart(svg);
+                                }
+                            });
+                        }
                     }
                 }, 300);
             }
@@ -120,7 +155,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         } catch (error) {
             console.error("Error rendering mermaid diagrams:", error);
         }
-    }, []);
+    }, [isMounted]);
 
     // Function to add pan and zoom functionality to a Mermaid chart
     const addPanZoomToChart = (svgElement: SVGElement) => {
@@ -150,38 +185,54 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 background: white;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             `;
-            svgElement.parentNode?.insertBefore(wrapper, svgElement);
-            wrapper.appendChild(svgElement);
             
-            // Ensure the SVG takes full width and height of wrapper
-            svgElement.style.width = '100%';
-            svgElement.style.height = '100%';
-            svgElement.style.margin = '0';
-            svgElement.style.padding = '0';
-            svgElement.style.display = 'block';
+            // Check if the SVG is still in the DOM before manipulating it
+            if (svgElement.parentNode && svgElement.isConnected) {
+                svgElement.parentNode.insertBefore(wrapper, svgElement);
+                wrapper.appendChild(svgElement);
+                
+                // Ensure the SVG takes full width and height of wrapper
+                svgElement.style.width = '100%';
+                svgElement.style.height = '100%';
+                svgElement.style.margin = '0';
+                svgElement.style.padding = '0';
+                svgElement.style.display = 'block';
+            } else {
+                console.log('SVG element no longer in DOM, skipping wrapper creation');
+                return;
+            }
+
+            // Only add event listeners if the component is still mounted
+            if (!isMounted) {
+                console.log('Component unmounted, skipping event listener setup');
+                return;
+            }
         }
 
         // Function to enable pan and zoom
         const enablePanZoom = () => {
-            if (!isHovering) return;
-            wrapper.style.cursor = 'grab';
-            wrapper.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            if (!isHovering || !isMounted) return;
+            wrapper!.style.cursor = 'grab';
+            wrapper!.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
         };
 
         // Function to disable pan and zoom
         const disablePanZoom = () => {
+            if (!isMounted) return;
             isPanning = false;
-            wrapper.style.cursor = 'default';
-            wrapper.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            wrapper!.style.cursor = 'default';
+            wrapper!.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
         };
 
         // Hover events to trigger pan and zoom functionality
-        wrapper.addEventListener('mouseenter', () => {
+        wrapper!.addEventListener('mouseenter', () => {
+            if (!isMounted) return;
             isHovering = true;
             enablePanZoom();
         });
 
-        wrapper.addEventListener('mouseleave', () => {
+        wrapper!.addEventListener('mouseleave', () => {
+            if (!isMounted) return;
             isHovering = false;
             disablePanZoom();
             // Reset transform when leaving
@@ -191,17 +242,17 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         });
 
         // Mouse event listeners for panning (only active when hovering)
-        wrapper.addEventListener('mousedown', (e) => {
-            if (!isHovering || e.button !== 0) return; // Only left mouse button and when hovering
+        wrapper!.addEventListener('mousedown', (e) => {
+            if (!isHovering || e.button !== 0 || !isMounted) return; // Only left mouse button and when hovering
             
             isPanning = true;
             startPoint = { x: e.clientX, y: e.clientY };
-            wrapper.style.cursor = 'grabbing';
+            wrapper!.style.cursor = 'grabbing';
             e.preventDefault();
         });
 
-        wrapper.addEventListener('mousemove', (e) => {
-            if (!isHovering || !isPanning) return;
+        wrapper!.addEventListener('mousemove', (e) => {
+            if (!isHovering || !isPanning || !isMounted) return;
             
             const deltaX = e.clientX - startPoint.x;
             const deltaY = e.clientY - startPoint.y;
@@ -214,15 +265,15 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             updateTransform(svgElement, currentTranslate, currentScale);
         });
 
-        wrapper.addEventListener('mouseup', () => {
-            if (!isHovering) return;
+        wrapper!.addEventListener('mouseup', () => {
+            if (!isHovering || !isMounted) return;
             isPanning = false;
-            wrapper.style.cursor = 'grab';
+            wrapper!.style.cursor = 'grab';
         });
 
         // Wheel event for zooming (only active when hovering)
-        wrapper.addEventListener('wheel', (e) => {
-            if (!isHovering) return;
+        wrapper!.addEventListener('wheel', (e) => {
+            if (!isHovering || !isMounted) return;
             
             e.preventDefault();
             
@@ -235,8 +286,8 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         });
 
         // Double-click to reset (only active when hovering)
-        wrapper.addEventListener('dblclick', () => {
-            if (!isHovering) return;
+        wrapper!.addEventListener('dblclick', () => {
+            if (!isHovering || !isMounted) return;
             
             currentTranslate = { x: 0, y: 0 };
             currentScale = 1;
@@ -246,6 +297,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
     // Function to update the transform of the SVG
     const updateTransform = (svgElement: SVGElement, translate: { x: number, y: number }, scale: number) => {
+        if (!isMounted || !svgElement.isConnected) return;
         svgElement.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
         svgElement.style.transformOrigin = 'center';
     };
@@ -257,10 +309,15 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
     // Render mermaid diagrams after component updates
     useEffect(() => {
-        if (processedHtml && containerRef.current) {
-            renderMermaidDiagrams();
+        if (processedHtml && containerRef.current && isMounted) {
+            // Add a small delay to ensure the DOM is fully updated
+            const timer = setTimeout(() => {
+                renderMermaidDiagrams();
+            }, 100);
+            
+            return () => clearTimeout(timer);
         }
-    }, [processedHtml, renderMermaidDiagrams]);
+    }, [processedHtml, renderMermaidDiagrams, isMounted]);
 
     return (
         <Card className={cn("p-6 overflow-auto", className)}>
