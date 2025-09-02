@@ -27,11 +27,11 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
     // Mark component as mounted and cleanup on unmount
     useEffect(() => {
+        const currentContainer = containerRef.current;
         setIsMounted(true);
         return () => {
             setIsMounted(false);
             // Cleanup any existing mermaid wrappers to prevent memory leaks
-            const currentContainer = containerRef.current;
             if (currentContainer) {
                 const wrappers = currentContainer.querySelectorAll('.mermaid-wrapper');
                 wrappers.forEach(wrapper => {
@@ -81,81 +81,12 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         }
     }, [content]);
 
-    // Function to render mermaid diagrams
-    const renderMermaidDiagrams = useCallback(async () => {
-        // Double-check that the ref is still valid
-        if (!containerRef.current || !isMounted) {
-            console.log('Container ref not ready or component unmounted, skipping mermaid rendering');
-            return;
-        }
-        
-        try {
-            console.log('Attempting to render mermaid diagrams...');
-            
-            // Wait for DOM to be fully updated
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Check again after the delay
-            if (!containerRef.current || !isMounted) {
-                console.log('Container ref lost after delay, skipping mermaid rendering');
-                return;
-            }
-            
-            const mermaidElements = containerRef.current.querySelectorAll('.mermaid');
-            console.log(`Found ${mermaidElements.length} mermaid elements`);
-            
-            if (mermaidElements.length === 0) return;
-            
-            // Log the content of each mermaid element
-            mermaidElements.forEach((element, index) => {
-                console.log(`Mermaid element ${index}:`, element.textContent);
-            });
-            
-            // Render all mermaid diagrams
-            try {
-                await mermaid.run({
-                    nodes: Array.from(mermaidElements) as HTMLElement[]
-                });
-                
-                // Add pan and zoom functionality after rendering is complete
-                // Use a small delay to ensure DOM is fully updated
-                setTimeout(() => {
-                    if (containerRef.current && isMounted) {
-                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
-                        if (renderedSvgs) {
-                            renderedSvgs.forEach((svg) => {
-                                if (svg instanceof SVGElement) {
-                                    console.log('Adding pan and zoom to SVG:', svg);
-                                    addPanZoomToChart(svg);
-                                }
-                            });
-                        }
-                    }
-                }, 200);
-                
-            } catch (error) {
-                console.error("Error in mermaid.run:", error);
-                // Fallback: try to add pan and zoom to any existing SVGs
-                setTimeout(() => {
-                    if (containerRef.current && isMounted) {
-                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
-                        if (renderedSvgs) {
-                            renderedSvgs.forEach((svg) => {
-                                if (svg instanceof SVGElement) {
-                                    addPanZoomToChart(svg);
-                                }
-                            });
-                        }
-                    }
-                }, 300);
-            }
-            
-            console.log('Mermaid diagrams rendered successfully');
-            
-        } catch (error) {
-            console.error("Error rendering mermaid diagrams:", error);
-        }
-    }, [isMounted]);
+    // Function to update the transform of the SVG
+    const updateTransform = (svgElement: SVGElement, translate: { x: number, y: number }, scale: number) => {
+        if (!isMounted || !svgElement.isConnected) return;
+        svgElement.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
+        svgElement.style.transformOrigin = 'center';
+    };
 
     // Function to add pan and zoom functionality to a Mermaid chart
     const addPanZoomToChart = (svgElement: SVGElement) => {
@@ -232,7 +163,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         });
 
         wrapper!.addEventListener('mouseleave', () => {
-            if (!isMounted) return;
+            if (!isHovering || !isMounted) return;
             isHovering = false;
             disablePanZoom();
             // Reset transform when leaving
@@ -295,12 +226,81 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         });
     };
 
-    // Function to update the transform of the SVG
-    const updateTransform = (svgElement: SVGElement, translate: { x: number, y: number }, scale: number) => {
-        if (!isMounted || !svgElement.isConnected) return;
-        svgElement.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
-        svgElement.style.transformOrigin = 'center';
-    };
+    // Function to render mermaid diagrams
+    const renderMermaidDiagrams = useCallback(async () => {
+        // Double-check that the ref is still valid
+        if (!containerRef.current || !isMounted) {
+            console.log('Container ref not ready or component unmounted, skipping mermaid rendering');
+            return;
+        }
+        
+        try {
+            console.log('Attempting to render mermaid diagrams...');
+            
+            // Wait for DOM to be fully updated
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check again after the delay
+            if (!containerRef.current || !isMounted) {
+                console.log('Container ref lost after delay, skipping mermaid rendering');
+                return;
+            }
+            
+            const mermaidElements = containerRef.current.querySelectorAll('.mermaid');
+            console.log(`Found ${mermaidElements.length} mermaid elements`);
+            
+            if (mermaidElements.length === 0) return;
+            
+            // Log the content of each mermaid element
+            mermaidElements.forEach((element, index) => {
+                console.log(`Mermaid element ${index}:`, element.textContent);
+            });
+            
+            // Render all mermaid diagrams
+            try {
+                await mermaid.run({
+                    nodes: Array.from(mermaidElements) as HTMLElement[]
+                });
+                
+                // Add pan and zoom functionality after rendering is complete
+                // Use a small delay to ensure DOM is fully updated
+                setTimeout(() => {
+                    if (containerRef.current && isMounted) {
+                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
+                        if (renderedSvgs) {
+                            renderedSvgs.forEach((svg) => {
+                                if (svg instanceof SVGElement) {
+                                    console.log('Adding pan and zoom to SVG:', svg);
+                                    addPanZoomToChart(svg);
+                                }
+                            });
+                        }
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error("Error in mermaid.run:", error);
+                // Fallback: try to add pan and zoom to any existing SVGs
+                setTimeout(() => {
+                    if (containerRef.current && isMounted) {
+                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
+                        if (renderedSvgs) {
+                            renderedSvgs.forEach((svg) => {
+                                if (svg instanceof SVGElement) {
+                                    addPanZoomToChart(svg);
+                                }
+                            });
+                        }
+                    }
+                }, 300);
+            }
+            
+            console.log('Mermaid diagrams rendered successfully');
+            
+        } catch (error) {
+            console.error("Error rendering mermaid diagrams:", error);
+        }
+    }, [isMounted, addPanZoomToChart]);
 
     // Process markdown when content changes
     useEffect(() => {

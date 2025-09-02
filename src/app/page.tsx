@@ -11,7 +11,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import {
-  Info,
   FileText,
   Split,
   Maximize2,
@@ -169,7 +168,7 @@ function HomeContent({
       onViewModeChange("fullscreen");
       onActiveTabChange("preview");
     }
-  }, [contentParam]);
+  }, [contentParam, onViewModeChange, onActiveTabChange]);
 
   // Pass the current markdown content to the copy function
   const handleSave = (content: string) => {
@@ -426,7 +425,7 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleCopy]);
+  }, [handleCopy, activeTab]);
 
   return (
     <main
