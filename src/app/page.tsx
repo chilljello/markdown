@@ -1,15 +1,15 @@
-"use client";
 
-import { MarkdownEditor } from "@/components/markdown-editor";
-import { MarkdownViewer } from "@/components/markdown-viewer";
-import { DragDropZone } from "@/components/drag-drop-zone";
-import { useState, useEffect, Suspense, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+
+import React, { useState, useEffect, Suspense, useCallback } from "react";
+import { MarkdownEditor } from "../components/markdown-editor";
+import { MarkdownViewer } from "../components/markdown-viewer";
+import { DragDropZone } from "../components/drag-drop-zone";
+import { Button } from "../components/ui/button";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable";
+} from "../components/ui/resizable";
 import {
   FileText,
   Split,
@@ -20,15 +20,14 @@ import {
   Eye,
   ExternalLink,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 import {
   getShareableUrl,
   getCompressionStats,
   decompressContent,
   isCompressedContent,
-} from "@/lib/compression";
-import { toast } from "sonner";
+} from "../lib/compression";
+import { getSearchParam } from "../lib/url-utils";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +35,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "../components/ui/dialog";
 
 // Sample markdown with Mermaid diagram for demonstration
 const SAMPLE_MARKDOWN = `# Markdown Mermaid Viewer
@@ -132,8 +131,7 @@ function HomeContent({
   onViewModeChange: (mode: "split" | "fullscreen") => void;
   onActiveTabChange: (tab: "edit" | "preview") => void;
 }) {
-  const searchParams = useSearchParams();
-  const contentParam = searchParams.get("content");
+  const contentParam = getSearchParam("content");
 
   // Helper function to decode content parameter (handles both compressed and raw content)
   const decodeContentParam = (param: string | null): string => {
@@ -189,9 +187,7 @@ function HomeContent({
         onViewModeChange("fullscreen");
         onActiveTabChange("preview");
         // Show success notification
-        toast.success(
-          `File "${file.name}" loaded successfully! Switched to fullscreen preview mode.`,
-        );
+        alert(`File "${file.name}" loaded successfully! Switched to fullscreen preview mode.`);
       }
     };
     reader.readAsText(file);
@@ -240,10 +236,12 @@ function HomeContent({
   );
 }
 
-export default function Home() {
-  const [viewMode, setViewMode] = useState<"split" | "fullscreen">(
-    "fullscreen",
-  );
+interface HomePageProps {
+  onNavigate?: (route: 'home' | 'doc') => void;
+}
+
+export default function HomePage({ onNavigate }: HomePageProps) {
+  const [viewMode, setViewMode] = useState<"split" | "fullscreen">("fullscreen");
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentMarkdown, setCurrentMarkdown] = useState(SAMPLE_MARKDOWN);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
@@ -284,30 +282,16 @@ export default function Home() {
         // Store the last shared URL for display
         setLastSharedUrl(shareableUrl);
 
-        // Show success toast with compression info
+        // Show success alert with compression info
         if (stats.shouldCompress) {
-          toast.success(
-            `URL copied! Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`,
-            {
-              description:
-                "Share this URL to let others view your markdown content",
-              duration: 4000,
-            },
-          );
+          alert(`URL copied! Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`);
         } else {
-          toast.success("URL copied to clipboard!", {
-            description:
-              "Share this URL to let others view your markdown content",
-            duration: 3000,
-          });
+          alert("URL copied to clipboard!");
         }
       })
       .catch((err) => {
         console.error("Failed to copy URL:", err);
-        toast.error("Failed to copy URL to clipboard", {
-          description: "Please try again or copy the URL manually",
-          duration: 4000,
-        });
+        alert("Failed to copy URL to clipboard");
       })
       .finally(() => {
         setIsSharing(false);
@@ -456,11 +440,12 @@ export default function Home() {
           </div>
 
           <div className="flex gap-4">
-            <Button variant="outline" size="sm" asChild>
-              <a href="/docs">View Documents</a>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <a href="/test-math">Test</a>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onNavigate?.('doc')}
+            >
+              View Documents
             </Button>
           </div>
 
@@ -575,7 +560,7 @@ export default function Home() {
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(lastSharedUrl);
-                  toast.success("URL copied to clipboard!");
+                  alert("URL copied to clipboard!");
                 }}
                 className="h-6 px-2 py-1 text-green-600 hover:text-green-800 text-xs"
                 title="Copy URL to clipboard"
@@ -649,7 +634,7 @@ export default function Home() {
                 onClick={() => {
                   if (lastSharedUrl) {
                     navigator.clipboard.writeText(lastSharedUrl);
-                    toast.success("URL copied to clipboard!");
+                    alert("URL copied to clipboard!");
                   }
                 }}
                 className="flex-1"

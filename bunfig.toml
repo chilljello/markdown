@@ -1,14 +1,19 @@
+[build]
+entrypoints = ["./src/index.tsx"]
+outdir = "./dist"
+minify = true
+sourcemap = "external"
+target = "browser"
+format = "esm"
+
+[dev]
+port = 3000
+hostname = "localhost"
+entrypoints = ["./index.html"]
+
 [install]
-# Use exact versions for better reproducibility
-exact = true
+peer = true
+exact = false
 
-[install.scopes]
-# Configure any scoped packages if needed
-
-[test]
-# Test configuration for Bun
-preload = ["./test/setup.ts"]
-
-[run]
-# Runtime configuration
-bun = true
+[resolve]
+alias = { "@" = "./src" }

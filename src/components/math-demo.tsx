@@ -1,8 +1,8 @@
-"use client";
+
 
 import React, { useState } from "react";
 import { MarkdownViewer } from "./markdown-viewer";
-import { Button } from "./ui/button";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 

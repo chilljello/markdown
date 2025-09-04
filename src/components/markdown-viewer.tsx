@@ -1,12 +1,12 @@
-"use client";
+
 
 import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 import mermaid from "mermaid";
 import DOMPurify from "dompurify";
 import "github-markdown-css/github-markdown.css";
-import { MathpixMarkdownModel as MM } from 'mathpix-markdown-it';
+import MarkdownIt from 'markdown-it';
 
 // Initialize mermaid with better error handling
 mermaid.initialize({
@@ -14,6 +14,14 @@ mermaid.initialize({
     theme: "default",
     securityLevel: "loose",
     logLevel: 'error'
+});
+
+// Initialize markdown-it with basic configuration
+const md = new MarkdownIt({
+    html: true,
+    breaks: true,
+    linkify: true,
+    typographer: true
 });
 
 interface MarkdownViewerProps {
@@ -26,36 +34,6 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     const [processedHtml, setProcessedHtml] = React.useState<string>("");
     const [isMounted, setIsMounted] = React.useState(false);
 
-    // Mark component as mounted and cleanup on unmount
-    useEffect(() => {
-        const currentContainer = containerRef.current;
-        setIsMounted(true);
-        
-        // Add mathpix styles to document head if not already present
-        const elStyle = document.getElementById('Mathpix-styles');
-        if (!elStyle) {
-            const style = document.createElement("style");
-            style.setAttribute("id", "Mathpix-styles");
-            style.innerHTML = MM.getMathpixFontsStyle() + MM.getMathpixStyle(true);
-            document.head.appendChild(style);
-        }
-        
-        return () => {
-            setIsMounted(false);
-            // Cleanup any existing mermaid wrappers to prevent memory leaks
-            if (currentContainer) {
-                const wrappers = currentContainer.querySelectorAll('.mermaid-wrapper');
-                wrappers.forEach(wrapper => {
-                    if (wrapper instanceof HTMLElement) {
-                        // Remove all event listeners by cloning the element
-                        const newWrapper = wrapper.cloneNode(true);
-                        wrapper.parentNode?.replaceChild(newWrapper, wrapper);
-                    }
-                });
-            }
-        };
-    }, []);
-
     // Function to sanitize mermaid code blocks to prevent parsing issues
     const sanitizeMermaidCode = (code: string): string => {
         // Normalize line endings (convert CRLF to LF)
@@ -67,9 +45,13 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         return sanitized;
     };
 
-    // Function to process markdown with mathpix-markdown-it and custom mermaid handling
+    // Function to process markdown with markdown-it and custom mermaid handling
     const processMarkdown = useCallback(async () => {
         try {
+            if (!content.trim()) {
+                return "";
+            }
+
             // Replace mermaid code blocks with special divs before rendering
             const processedContent = content.replace(
                 /```mermaid\n([\s\S]*?)```/g,
@@ -80,73 +62,43 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 }
             );
 
-            // Configure mathpix-markdown-it options for enhanced math rendering
-            const options = {
-                outMath: {
-                    include_mathml: true,
-                    include_asciimath: true,
-                    include_latex: true,
-                    include_svg: true,
-                    include_tsv: true,
-                    include_table_html: true,
-                },
-                htmlSanitize: {
-                    allowedTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
-                        'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'abbr', 'code', 'hr', 'br', 'div',
-                        'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'u', 'span', 'math'],
-                    allowedAttributes: {
-                        a: ['href', 'name', 'target'],
-                        img: ['src', 'alt', 'title', 'width', 'height'],
-                        span: ['class', 'style'],
-                        div: ['class', 'id', 'style'],
-                        math: ['xmlns'],
-                        mjx: ['class', 'jax', 'display', 'style']
-                    },
-                    allowedSchemes: ['http', 'https', 'ftp', 'mailto', 'data'],
-                    allowProtocolRelative: true
-                },
-                codeHighlight: {
-                    auto: true,
-                    code: true
-                },
-                enable_markdown: true,
-                enable_latex: true,
-                enable_markdown_mmd_extensions: true,
-                accessibility: {
-                    assistiveMml: true
-                }
-            };
-
-            // Convert markdown to HTML using mathpix-markdown-it
-            console.log('Processing markdown with mathpix:', processedContent.substring(0, 200));
-            const html = MM.markdownToHTML(processedContent, options);
-            console.log('Mathpix output:', html.substring(0, 200));
+            // Render the markdown content using markdown-it
+            const renderedHtml = md.render(processedContent);
             
-            // Sanitize HTML but keep the mermaid divs and math elements
-            const sanitizedHtml = DOMPurify.sanitize(html, {
-                ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
-                    'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'abbr', 'code', 'hr', 'br', 'div',
-                    'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'u', 'span', 'math',
-                    'mjx-container', 'mjx-math', 'mjx-mscript', 'mjx-mo', 'mjx-mi', 'mjx-mn', 'mjx-mfrac',
-                    'mjx-msqrt', 'mjx-msup', 'mjx-msub', 'mjx-mrow', 'mjx-mtext', 'mjx-mspace'],
-                ALLOWED_ATTR: ['href', 'name', 'target', 'src', 'alt', 'title', 'width', 'height', 'class', 'style', 'id', 'xmlns', 'jax', 'display'],
-                ALLOW_DATA_ATTR: false
+            // Sanitize the HTML to prevent XSS attacks
+            const sanitizedHtml = DOMPurify.sanitize(renderedHtml, {
+                ALLOWED_TAGS: [
+                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    'p', 'br', 'hr',
+                    'ul', 'ol', 'li',
+                    'blockquote', 'pre', 'code',
+                    'em', 'strong', 'del', 'ins',
+                    'a', 'img',
+                    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                    'div', 'span',
+                    'math', 'mrow', 'mi', 'mn', 'mo', 'msup', 'msub', 'mfrac', 'msqrt',
+                    'svg', 'path', 'g', 'text', 'rect', 'circle', 'line', 'polygon'
+                ],
+                ALLOWED_ATTR: [
+                    'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+                    'width', 'height', 'viewBox', 'd', 'x', 'y', 'fill', 'stroke',
+                    'stroke-width', 'stroke-linecap', 'stroke-linejoin'
+                ]
             });
-            
-            console.log('Sanitized HTML:', sanitizedHtml.substring(0, 200));
+
             return sanitizedHtml;
         } catch (error) {
             console.error("Error processing markdown:", error);
-            return "Error processing markdown content";
+            return `<div class="error">Error processing markdown content: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
         }
     }, [content]);
 
     // Function to update the transform of the SVG
-    const updateTransform = (svgElement: SVGElement, translate: { x: number, y: number }, scale: number) => {
+    const updateTransform = useCallback((svgElement: SVGElement, translate: { x: number, y: number }, scale: number) => {
         if (!isMounted || !svgElement.isConnected) return;
         svgElement.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
         svgElement.style.transformOrigin = 'center';
-    };
+    }, [isMounted]);
 
     // Function to add pan and zoom functionality to a Mermaid chart
     const addPanZoomToChart = useCallback((svgElement: SVGElement) => {
@@ -161,27 +113,10 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         if (!wrapper || !wrapper.classList.contains('mermaid-wrapper')) {
             wrapper = document.createElement('div');
             wrapper.className = 'mermaid-wrapper';
-            wrapper.style.cssText = `
-                position: relative;
-                overflow: hidden;
-                cursor: default;
-                border-radius: 8px;
-                transition: all 0.2s ease;
-                width: 100%;
-                height: auto;
-                min-height: 200px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            `;
-            
             // Check if the SVG is still in the DOM before manipulating it
             if (svgElement.parentNode && svgElement.isConnected) {
                 svgElement.parentNode.insertBefore(wrapper, svgElement);
                 wrapper.appendChild(svgElement);
-                
                 // Ensure the SVG takes full width and height of wrapper
                 svgElement.style.width = '100%';
                 svgElement.style.height = '100%';
@@ -362,10 +297,18 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         }
     }, [isMounted, addPanZoomToChart]);
 
+    // Set mounted state when component mounts
+    useEffect(() => {
+        setIsMounted(true);
+        return () => setIsMounted(false);
+    }, []);
+
     // Process markdown when content changes
     useEffect(() => {
-        processMarkdown().then(setProcessedHtml);
-    }, [content, processMarkdown]);
+        if (isMounted) {
+            processMarkdown().then(setProcessedHtml);
+        }
+    }, [content, processMarkdown, isMounted]);
 
     // Render mermaid diagrams after component updates
     useEffect(() => {

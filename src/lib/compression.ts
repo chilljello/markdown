@@ -84,10 +84,13 @@ export function isCompressedContent(content: string): boolean {
 }
 
 // Get a shareable URL with compressed content
-export function getShareableUrl(content: string, baseUrl: string = window.location.origin): string {
+export function getShareableUrl(content: string, baseUrl?: string): string {
+  // Use provided baseUrl or get from window.location
+  const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  
   if (content.length < 200) {
     // For very short content, use raw content
-    return `${baseUrl}?content=${encodeURIComponent(content)}`;
+    return `${origin}?content=${encodeURIComponent(content)}`;
   }
   
   // For longer content, compress it with gzip
@@ -96,7 +99,7 @@ export function getShareableUrl(content: string, baseUrl: string = window.locati
   
   console.log(`Content compressed: ${content.length} → ${compressed.length} chars (${compressionRatio}% reduction)`);
   
-  return `${baseUrl}?content=${encodeURIComponent(compressed)}`;
+  return `${origin}?content=${encodeURIComponent(compressed)}`;
 }
 
 // Validate if content parameter should be processed
