@@ -220,6 +220,341 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
+/* Mathpix Markdown Styles */
+.mathpix-markdown {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+/* Enhanced MathJax styling for mathpix-markdown-it */
+.mjx-container {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+.mjx-math {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+}
+
+/* Mathpix inline math styling */
+.math-inline {
+  display: inline-block;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+/* Mathpix display math styling */
+.math-display {
+  display: block;
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--muted);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+  overflow-x: auto;
+}
+
+/* Enhanced table styling for mathpix tables */
+.mathpix-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+}
+
+.mathpix-markdown th,
+.mathpix-markdown td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.mathpix-markdown th {
+  background-color: var(--muted);
+  font-weight: 600;
+}
+
+/* Enhanced code block styling */
+.mathpix-markdown pre {
+  background-color: var(--muted);
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+.mathpix-markdown code {
+  background-color: var(--muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+}
+
+/* Enhanced blockquote styling */
+.mathpix-markdown blockquote {
+  border-left: 4px solid var(--primary);
+  margin: 20px 0;
+  padding: 16px 20px;
+  background-color: var(--muted);
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+}
+
+/* Enhanced list styling */
+.mathpix-markdown ul,
+.mathpix-markdown ol {
+  padding-left: 24px;
+  margin: 16px 0;
+}
+
+.mathpix-markdown li {
+  margin: 8px 0;
+}
+
+/* Enhanced heading styling */
+.mathpix-markdown h1,
+.mathpix-markdown h2,
+.mathpix-markdown h3,
+.mathpix-markdown h4,
+.mathpix-markdown h5,
+.mathpix-markdown h6 {
+  margin: 24px 0 16px 0;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--foreground);
+}
+
+.mathpix-markdown h1 {
+  font-size: 2em;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.mathpix-markdown h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.mathpix-markdown h3 {
+  font-size: 1.25em;
+}
+
+/* Enhanced paragraph spacing */
+.mathpix-markdown p {
+  margin: 16px 0;
+  line-height: 1.6;
+}
+
+/* Enhanced link styling */
+.mathpix-markdown a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.mathpix-markdown a:hover {
+  border-bottom-color: var(--primary);
+}
+
+/* Enhanced image styling */
+.mathpix-markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced horizontal rule styling */
+.mathpix-markdown hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--border), transparent);
+  margin: 32px 0;
+}
+
+/* Enhanced emphasis styling */
+.mathpix-markdown strong {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.mathpix-markdown em {
+  font-style: italic;
+  color: var(--muted-foreground);
+}
+
+/* Enhanced strikethrough styling */
+.mathpix-markdown strike {
+  text-decoration: line-through;
+  color: var(--muted-foreground);
+}
+
+/* Enhanced abbreviation styling */
+.mathpix-markdown abbr {
+  border-bottom: 1px dotted var(--border);
+  cursor: help;
+}
+
+/* Enhanced definition list styling */
+.mathpix-markdown dl {
+  margin: 20px 0;
+}
+
+.mathpix-markdown dt {
+  font-weight: 600;
+  color: var(--foreground);
+  margin-top: 16px;
+}
+
+.mathpix-markdown dd {
+  margin-left: 20px;
+  margin-top: 8px;
+  color: var(--muted-foreground);
+}
+
+/* Enhanced footnote styling */
+.mathpix-markdown .footnote {
+  font-size: 0.9em;
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+  padding-top: 16px;
+}
+
+.mathpix-markdown .footnote-ref {
+  font-size: 0.8em;
+  vertical-align: super;
+  color: var(--primary);
+}
+
+/* Enhanced chemistry SMILES styling */
+.mathpix-markdown .smiles {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background-color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* Enhanced theorem and proof styling */
+.mathpix-markdown .theorem {
+  background-color: var(--muted);
+  border-left: 4px solid var(--chart-1);
+  padding: 16px;
+  margin: 20px 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.mathpix-markdown .theorem-title {
+  font-weight: 600;
+  color: var(--chart-1);
+  margin-bottom: 12px;
+  font-size: 1.1em;
+}
+
+.mathpix-markdown .proof {
+  background-color: var(--muted);
+  border-left: 4px solid var(--chart-2);
+  padding: 16px;
+  margin: 20px 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.mathpix-markdown .proof-title {
+  font-weight: 600;
+  color: var(--chart-2);
+  margin-bottom: 12px;
+  font-size: 1.1em;
+}
+
+/* Enhanced abstract styling */
+.mathpix-markdown .abstract {
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  margin: 24px 0;
+  font-style: italic;
+}
+
+.mathpix-markdown .abstract-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--foreground);
+}
+
+/* Enhanced author list styling */
+.mathpix-markdown .authors {
+  text-align: center;
+  margin: 20px 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* Enhanced section styling */
+.mathpix-markdown .section {
+  margin: 32px 0;
+}
+
+.mathpix-markdown .section-title {
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 16px;
+}
+
+/* Dark mode enhancements for mathpix content */
+.dark .mathpix-markdown {
+  color: var(--foreground);
+}
+
+.dark .mathpix-markdown .math-display {
+  background: var(--muted);
+  border-left-color: var(--primary);
+}
+
+.dark .mathpix-markdown .theorem {
+  background: var(--muted);
+  border-left-color: var(--chart-1);
+}
+
+.dark .mathpix-markdown .proof {
+  background: var(--muted);
+  border-left-color: var(--chart-2);
+}
+
+.dark .mathpix-markdown .abstract {
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+/* Responsive design for mathpix content */
+@media (max-width: 768px) {
+  .mathpix-markdown {
+    font-size: 0.95em;
+  }
+  
+  .mathpix-markdown h1 {
+    font-size: 1.75em;
+  }
+  
+  .mathpix-markdown h2 {
+    font-size: 1.4em;
+  }
+  
+  .mathpix-markdown pre {
+    padding: 12px;
+  }
+  
+  .mathpix-markdown blockquote {
+    padding: 12px 16px;
+  }
+}
+
 /* Math equation styling */
 .math-inline {
   display: inline-block;

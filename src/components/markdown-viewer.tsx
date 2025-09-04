@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import mermaid from "mermaid";
 import DOMPurify from "dompurify";
 import "github-markdown-css/github-markdown.css";
+import { MathpixMarkdownModel as MM } from 'mathpix-markdown-it';
 
 // Initialize mermaid with better error handling
 mermaid.initialize({
@@ -29,6 +30,16 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     useEffect(() => {
         const currentContainer = containerRef.current;
         setIsMounted(true);
+        
+        // Add mathpix styles to document head if not already present
+        const elStyle = document.getElementById('Mathpix-styles');
+        if (!elStyle) {
+            const style = document.createElement("style");
+            style.setAttribute("id", "Mathpix-styles");
+            style.innerHTML = MM.getMathpixFontsStyle() + MM.getMathpixStyle(true);
+            document.head.appendChild(style);
+        }
+        
         return () => {
             setIsMounted(false);
             // Cleanup any existing mermaid wrappers to prevent memory leaks
@@ -56,12 +67,9 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         return sanitized;
     };
 
-    // Function to process markdown with custom mermaid handling
+    // Function to process markdown with mathpix-markdown-it and custom mermaid handling
     const processMarkdown = useCallback(async () => {
         try {
-            // Import marked dynamically to avoid TypeScript issues
-            const { marked } = await import('marked');
-
             // Replace mermaid code blocks with special divs before rendering
             const processedContent = content.replace(
                 /```mermaid\n([\s\S]*?)```/g,
@@ -71,10 +79,62 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                     return `<div class="mermaid" id="${id}">${sanitizedCode}</div>`;
                 }
             );
-            // Convert markdown to HTML
-            const html = await marked(processedContent);
-            // Sanitize HTML but keep the mermaid divs
-            return DOMPurify.sanitize(html);
+
+            // Configure mathpix-markdown-it options for enhanced math rendering
+            const options = {
+                outMath: {
+                    include_mathml: true,
+                    include_asciimath: true,
+                    include_latex: true,
+                    include_svg: true,
+                    include_tsv: true,
+                    include_table_html: true,
+                },
+                htmlSanitize: {
+                    allowedTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
+                        'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'abbr', 'code', 'hr', 'br', 'div',
+                        'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'u', 'span', 'math'],
+                    allowedAttributes: {
+                        a: ['href', 'name', 'target'],
+                        img: ['src', 'alt', 'title', 'width', 'height'],
+                        span: ['class', 'style'],
+                        div: ['class', 'id', 'style'],
+                        math: ['xmlns'],
+                        mjx: ['class', 'jax', 'display', 'style']
+                    },
+                    allowedSchemes: ['http', 'https', 'ftp', 'mailto', 'data'],
+                    allowProtocolRelative: true
+                },
+                codeHighlight: {
+                    auto: true,
+                    code: true
+                },
+                enable_markdown: true,
+                enable_latex: true,
+                enable_markdown_mmd_extensions: true,
+                accessibility: {
+                    assistiveMml: true
+                }
+            };
+
+            // Convert markdown to HTML using mathpix-markdown-it
+            console.log('Processing markdown with mathpix:', processedContent.substring(0, 200));
+            const html = MM.markdownToHTML(processedContent, options);
+            console.log('Mathpix output:', html.substring(0, 200));
+            
+            // Sanitize HTML but keep the mermaid divs and math elements
+            const sanitizedHtml = DOMPurify.sanitize(html, {
+                ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
+                    'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'abbr', 'code', 'hr', 'br', 'div',
+                    'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'u', 'span', 'math',
+                    'mjx-container', 'mjx-math', 'mjx-mscript', 'mjx-mo', 'mjx-mi', 'mjx-mn', 'mjx-mfrac',
+                    'mjx-msqrt', 'mjx-msup', 'mjx-msub', 'mjx-mrow', 'mjx-mtext', 'mjx-mspace'],
+                ALLOWED_ATTR: ['href', 'name', 'target', 'src', 'alt', 'title', 'width', 'height', 'class', 'style', 'id', 'xmlns', 'jax', 'display'],
+                ALLOW_DATA_ATTR: false
+            });
+            
+            console.log('Sanitized HTML:', sanitizedHtml.substring(0, 200));
+            return sanitizedHtml;
         } catch (error) {
             console.error("Error processing markdown:", error);
             return "Error processing markdown content";
@@ -89,7 +149,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     };
 
     // Function to add pan and zoom functionality to a Mermaid chart
-    const addPanZoomToChart = (svgElement: SVGElement) => {
+    const addPanZoomToChart = useCallback((svgElement: SVGElement) => {
         let isPanning = false;
         let startPoint = { x: 0, y: 0 };
         let currentTranslate = { x: 0, y: 0 };
@@ -224,7 +284,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             currentScale = 1;
             updateTransform(svgElement, currentTranslate, currentScale);
         });
-    };
+    }, [isMounted, updateTransform]);
 
     // Function to render mermaid diagrams
     const renderMermaidDiagrams = useCallback(async () => {
@@ -321,26 +381,9 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
     return (
         <Card className={cn("p-6 overflow-auto", className)}>
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                    .mermaid {
-                        display: block !important;
-                        text-align: center;
-                        margin: 20px 0;
-                        background: white;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                        min-height: 100px;
-                    }
-                    .mermaid svg {
-                        max-width: 100%;
-                        height: auto;
-                    }
-                `
-            }} />
             <div
                 ref={containerRef}
-                className="markdown-body"
+                className="markdown-body mathpix-markdown"
                 dangerouslySetInnerHTML={{ __html: processedHtml }}
             />
         </Card>

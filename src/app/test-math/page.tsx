@@ -146,7 +146,7 @@ export default function TestMathPage() {
         It includes the specific content from your image to test Greek letter rendering.
       </p>
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h2 className="text-lg font-semibold text-blue-800 mb-2">What's Enhanced:</h2>
+        <h2 className="text-lg font-semibold text-blue-800 mb-2">What&apos;s Enhanced:</h2>
         <ul className="text-blue-700 text-sm space-y-1">
           <li>• <strong>Better Font Rendering:</strong> Multiple math font families for crisp symbol display</li>
           <li>• <strong>Greek Letter Support:</strong> All lowercase and uppercase Greek letters</li>
