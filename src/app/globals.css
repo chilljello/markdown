@@ -50,6 +50,7 @@
     from {
       height: 0;
     }
+
     to {
       height: var(--radix-accordion-content-height);
     }
@@ -59,6 +60,7 @@
     from {
       height: var(--radix-accordion-content-height);
     }
+
     to {
       height: 0;
     }
@@ -140,11 +142,190 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
-.mermaid > svg {
+/* Mermaid Chart Styles */
+.mermaid {
+  display: block !important;
+  text-align: center;
+  margin: 20px 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 100px;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
   margin: 0 auto;
+}
+
+/* Dark mode support for mermaid charts */
+.dark .mermaid {
+  background: oklch(0.269 0 0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Mermaid Wrapper Styles */
+.mermaid-wrapper {
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Mermaid wrapper hover states */
+.mermaid-wrapper:hover,
+.mermaid-wrapper.hover {
+  cursor: grab;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mermaid wrapper active state (when panning) */
+.mermaid-wrapper.panning {
+  cursor: grabbing;
+}
+
+/* Mermaid wrapper SVG styling */
+.mermaid-wrapper svg {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+/* Dark mode support for mermaid wrapper */
+.dark .mermaid-wrapper {
+  background: oklch(0.269 0 0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark .mermaid-wrapper:hover,
+.dark .mermaid-wrapper.hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Math equation styling */
+.math-inline {
+  display: inline-block;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+.math-display {
+  display: block;
+  text-align: center;
+  margin: 20px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007acc;
+}
+
+/* Enhanced MathML styling with better fonts */
+math {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Enhanced LaTeX styling with better fonts */
+.latex {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+  font-size: 1.1em;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Enhanced MathJax styling for better symbol rendering */
+.MathJax,
+.MathJax_SVG,
+.MathJax_MathML {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Ensure proper rendering of mathematical operators and symbols */
+.MathJax .mo,
+.MathJax .mi,
+.MathJax .mn,
+.MathJax .mfrac,
+.MathJax .msqrt,
+.MathJax .msup,
+.MathJax .msub {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Better spacing for inline math */
+.markdown-body p .MathJax {
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+/* Enhanced display math styling */
+.MathJax_Display {
+  text-align: center;
+  margin: 1.5em 0;
+  padding: 1em;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007acc;
+  overflow-x: auto;
+}
+
+/* Ensure proper spacing for math content */
+.markdown-body .math-display+p,
+.markdown-body .MathJax_Display+p {
+  margin-top: 1em;
+}
+
+.markdown-body p+.math-display,
+.markdown-body p+.MathJax_Display {
+  margin-top: 1em;
+}
+
+/* Better rendering for Greek letters and special symbols */
+.MathJax .mi[mathvariant="normal"],
+.MathJax .mi[mathvariant="italic"] {
+  font-family: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif;
+}
+
+/* Ensure proper spacing for fractions and operators */
+.MathJax .mfrac {
+  margin: 0 0.2em;
+}
+
+.MathJax .msub,
+.MathJax .msup {
+  margin: 0 0.1em;
+}
+
+/* Hide any leftover LaTeX source text */
+.math-latex-source {
+  display: none !important;
+}
+
+/* Ensure math elements are properly displayed */
+.math-element {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Better spacing for math content */
+.math-content {
+  margin: 0.5em 0;
 }

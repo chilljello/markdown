@@ -459,6 +459,9 @@ export default function Home() {
             <Button variant="outline" size="sm" asChild>
               <a href="/docs">View Documents</a>
             </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/test-math">Test</a>
+            </Button>
           </div>
 
           <div className="ml-auto flex gap-2">
