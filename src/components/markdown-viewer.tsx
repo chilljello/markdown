@@ -5,8 +5,28 @@ import { Card } from "./ui/card";
 import { cn } from "../lib/utils";
 import mermaid from "mermaid";
 import DOMPurify from "dompurify";
-import "github-markdown-css/github-markdown.css";
 import MarkdownIt from 'markdown-it';
+
+// Safe import with fallback for mathpix-markdown-it
+let MM: any = null;
+let mathpixMarkdownPlugin: any = null;
+
+try {
+    const mathpixModule = require('mathpix-markdown-it');
+    MM = mathpixModule.MathpixMarkdownModel;
+    mathpixMarkdownPlugin = mathpixModule.mathpixMarkdownPlugin;
+    
+    // Check if the required methods are available
+    if (!MM || typeof MM.getMathpixFontsStyle !== 'function' || typeof MM.getMathpixStyle !== 'function') {
+        console.warn('MathpixMarkdownModel methods not available, falling back to basic markdown rendering');
+        MM = null;
+        mathpixMarkdownPlugin = null;
+    }
+} catch (error) {
+    console.warn('Failed to load mathpix-markdown-it, falling back to basic markdown rendering:', error);
+    MM = null;
+    mathpixMarkdownPlugin = null;
+}
 
 // Initialize mermaid with better error handling
 mermaid.initialize({
@@ -16,13 +36,61 @@ mermaid.initialize({
     logLevel: 'error'
 });
 
-// Initialize markdown-it with basic configuration
+// Initialize markdown-it with conditional mathpix-markdown-it support
 const md = new MarkdownIt({
     html: true,
     breaks: true,
     linkify: true,
     typographer: true
 });
+
+// Only use mathpix plugin if it's available
+if (mathpixMarkdownPlugin) {
+    try {
+        md.use(mathpixMarkdownPlugin, {
+            outMath: {
+                include_mathml: false,
+                include_asciimath: false,
+                include_latex: false,
+                include_svg: true,
+                include_tsv: true,
+                include_table_html: true,
+            },
+            htmlSanitize: {
+                allowedTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
+                    'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'abbr', 'code', 'hr', 'br', 'div',
+                    'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'u', 'span', 'math',
+                    'mjx-container', 'mjx-math', 'mjx-mscript', 'mjx-mo', 'mjx-mi', 'mjx-mn', 'mjx-mfrac',
+                    'mjx-msqrt', 'mjx-msup', 'mjx-msub', 'mjx-mrow', 'mjx-mtext', 'mjx-mspace'],
+                allowedAttributes: {
+                    a: ['href', 'name', 'target'],
+                    img: ['src', 'alt', 'title', 'width', 'height'],
+                    span: ['class', 'style'],
+                    div: ['class', 'id', 'style'],
+                    math: ['xmlns'],
+                    mjx: ['class', 'jax', 'display', 'style']
+                },
+                allowedSchemes: ['http', 'https', 'ftp', 'mailto', 'data'],
+                allowProtocolRelative: true
+            },
+            codeHighlight: {
+                auto: true,
+                code: true
+            },
+            enable_markdown: true,
+            enable_latex: true,
+            enable_markdown_mmd_extensions: true,
+            accessibility: {
+                assistiveMml: true
+            }
+        });
+        console.log('Mathpix-markdown-it plugin loaded successfully');
+    } catch (error) {
+        console.warn('Failed to initialize mathpix-markdown-it plugin:', error);
+    }
+} else {
+    console.log('Using basic markdown-it without mathpix enhancements');
+}
 
 interface MarkdownViewerProps {
     content: string;
@@ -65,7 +133,18 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             // Render the markdown content using markdown-it
             const renderedHtml = md.render(processedContent);
             
-            // Sanitize the HTML to prevent XSS attacks
+            // Get MathJax styles from mathpix-markdown-it if available
+            let mathjaxStyles = '';
+            if (MM && typeof MM.getMathpixFontsStyle === 'function' && typeof MM.getMathpixStyle === 'function') {
+                try {
+                    mathjaxStyles = MM.getMathpixFontsStyle() + MM.getMathpixStyle(true);
+                } catch (error) {
+                    console.warn('Failed to get MathJax styles from mathpix-markdown-it:', error);
+                    mathjaxStyles = '';
+                }
+            }
+            
+            // Sanitize the HTML to prevent XSS attacks, including MathJax elements
             const sanitizedHtml = DOMPurify.sanitize(renderedHtml, {
                 ALLOWED_TAGS: [
                     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -77,16 +156,20 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                     'table', 'thead', 'tbody', 'tr', 'th', 'td',
                     'div', 'span',
                     'math', 'mrow', 'mi', 'mn', 'mo', 'msup', 'msub', 'mfrac', 'msqrt',
-                    'svg', 'path', 'g', 'text', 'rect', 'circle', 'line', 'polygon'
+                    'svg', 'path', 'g', 'text', 'rect', 'circle', 'line', 'polygon',
+                    'mjx-container', 'mjx-math', 'mjx-mscript', 'mjx-mo', 'mjx-mi', 'mjx-mn', 
+                    'mjx-mfrac', 'mjx-msqrt', 'mjx-msup', 'mjx-msub', 'mjx-mrow', 'mjx-mtext', 'mjx-mspace'
                 ],
                 ALLOWED_ATTR: [
                     'href', 'src', 'alt', 'title', 'class', 'id', 'style',
                     'width', 'height', 'viewBox', 'd', 'x', 'y', 'fill', 'stroke',
-                    'stroke-width', 'stroke-linecap', 'stroke-linejoin'
+                    'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+                    'jax', 'display', 'xmlns'
                 ]
             });
 
-            return sanitizedHtml;
+            // Combine MathJax styles with rendered HTML if available
+            return mathjaxStyles ? `<style>${mathjaxStyles}</style>${sanitizedHtml}` : sanitizedHtml;
         } catch (error) {
             console.error("Error processing markdown:", error);
             return `<div class="error">Error processing markdown content: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
@@ -221,6 +304,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         });
     }, [isMounted, updateTransform]);
 
+
     // Function to render mermaid diagrams
     const renderMermaidDiagrams = useCallback(async () => {
         // Double-check that the ref is still valid
@@ -326,7 +410,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         <Card className={cn("overflow-auto", className)}>
             <div
                 ref={containerRef}
-                className="markdown-body mathpix-markdown"
+                className="markdown-body mathpix-markdown mathjax-container"
                 dangerouslySetInnerHTML={{ __html: processedHtml }}
             />
         </Card>

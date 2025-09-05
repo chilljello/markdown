@@ -13,47 +13,52 @@
   // Base colors
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
-  
+
   // Card colors
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
-  
+
   // Popover colors
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  
+
   // Primary colors
   --primary: 222.2 47.4% 11.2%;
   --primary-foreground: 210 40% 98%;
-  
+
   // Secondary colors
   --secondary: 210 40% 96%;
   --secondary-foreground: 222.2 84% 4.9%;
-  
+
   // Muted colors
   --muted: 210 40% 96%;
   --muted-foreground: 215.4 16.3% 46.9%;
-  
+
   // Accent colors
   --accent: 210 40% 96%;
   --accent-foreground: 222.2 84% 4.9%;
-  
+
   // Destructive colors
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
-  
+
+  // Success colors
+  --success: 142 76% 36%;
+  --success-foreground: 210 40% 98%;
+  --success-bg: 142 76% 36%;
+
   // Border and input colors
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
   --ring: 222.2 84% 4.9%;
-  
+
   // Chart colors
   --chart-1: 222.2 47.4% 11.2%;
   --chart-2: 210 40% 96%;
   --chart-3: 215.4 16.3% 46.9%;
   --chart-4: 210 40% 98%;
   --chart-5: 214.3 31.8% 91.4%;
-  
+
   // Sidebar colors
   --sidebar: 210 40% 98%;
   --sidebar-foreground: 222.2 84% 4.9%;
@@ -63,10 +68,10 @@
   --sidebar-accent-foreground: 222.2 84% 4.9%;
   --sidebar-border: 214.3 31.8% 91.4%;
   --sidebar-ring: 222.2 84% 4.9%;
-  
+
   // Radius
   --radius: 0.5rem;
-  
+
   // Spacing
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -74,18 +79,18 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-xxl: 3rem;
-  
+
   // Border radius
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  
+
   // Font families
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
   --font-math: "Computer Modern", "Times New Roman", serif;
-  
+
   // Font sizes
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -95,7 +100,7 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
-  
+
   // Line heights
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
@@ -120,6 +125,11 @@
   --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
+
+  // Success colors
+  --success: 142 76% 36%;
+  --success-foreground: 210 40% 98%;
+  --success-bg: 142 76% 36%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
@@ -136,10 +146,10 @@
   --sidebar-accent-foreground: 210 40% 98%;
   --sidebar-border: 217.2 32.6% 17.5%;
   --sidebar-ring: 212.7 26.8% 83.9%;
-  
+
   // Radius
   --radius: 0.5rem;
-  
+
   // Spacing
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -147,18 +157,18 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-xxl: 3rem;
-  
+
   // Border radius
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  
+
   // Font families
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
   --font-math: "Computer Modern", "Times New Roman", serif;
-  
+
   // Font sizes
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -168,7 +178,7 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
-  
+
   // Line heights
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
@@ -211,7 +221,12 @@ body {
 // Typography
 // =============================================================================
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-weight: 600;
   line-height: var(--line-height-tight);
@@ -257,7 +272,7 @@ a {
   color: var(--primary);
   text-decoration: none;
   @include transition(border-bottom-color);
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -287,7 +302,7 @@ pre {
   border-radius: var(--radius-md);
   overflow-x: auto;
   border: 1px solid var(--border);
-  
+
   code {
     background-color: transparent;
     padding: 0;
@@ -304,10 +319,11 @@ blockquote {
   font-style: italic;
 }
 
-ul, ol {
+ul,
+ol {
   margin: var(--spacing-md) 0;
   padding-left: var(--spacing-xl);
-  
+
   li {
     margin: var(--spacing-sm) 0;
   }
@@ -385,7 +401,7 @@ button {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: var(--radius-sm);
-  
+
   &:hover {
     background: var(--muted-foreground);
   }
@@ -436,6 +452,7 @@ button {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -447,6 +464,7 @@ button {
     opacity: 1;
     transform: translateY(0);
   }
+
   to {
     opacity: 0;
     transform: translateY(10px);
@@ -466,7 +484,7 @@ button {
 .loading {
   position: relative;
   pointer-events: none;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -485,5 +503,706 @@ button {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+// =============================================================================
+// Sonner Toast Custom Styling
+// =============================================================================
+[data-sonner-toast][data-type="success"] {
+  background: var(--success-bg);
+  color: var(--success-foreground);
+  border-color: var(--success);
+}
+
+[data-sonner-toast][data-type="success"] [data-description] {
+  color: var(--success-foreground);
+}
+
+// =============================================================================
+// Markdown Body Styling (Local Implementation)
+// =============================================================================
+// 
+// PURPOSE: This section replaces the external github-markdown-css import
+// to avoid conflicts with our global theme system and ensure consistent
+// styling that uses our CSS custom properties instead of hardcoded colors.
+//
+// REPLACEMENT FOR: import "github-markdown-css/github-markdown.css"
+// 
+// BENEFITS:
+// - Uses global theme variables (--foreground, --background, --primary, etc.)
+// - Automatic dark/light mode support
+// - Consistent success colors with toast system
+// - No external dependency conflicts
+// - Full control over markdown styling
+//
+// =============================================================================
+
+// Local markdown styling - replaces github-markdown-css external import
+.markdown-body {
+  // Use global theme variables instead of hardcoded colors from external CSS
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  word-wrap: break-word;
+  margin: 0;
+
+  // Typography
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--foreground);
+  }
+
+  h1 {
+    font-size: var(--font-size-4xl);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+  }
+
+  h2 {
+    font-size: var(--font-size-3xl);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+  }
+
+  h3 {
+    font-size: var(--font-size-2xl);
+  }
+
+  h4 {
+    font-size: var(--font-size-xl);
+  }
+
+  h5 {
+    font-size: var(--font-size-lg);
+  }
+
+  h6 {
+    font-size: var(--font-size-base);
+    color: var(--muted-foreground);
+  }
+
+  // Paragraphs and text
+  p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    line-height: var(--line-height-normal);
+  }
+
+  // Links
+  a {
+    color: var(--primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // Code
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background-color: var(--muted);
+    padding: 0.125rem 0.25rem;
+    border-radius: var(--radius-sm);
+    color: var(--foreground);
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    background-color: var(--muted);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    border: 1px solid var(--border);
+
+    code {
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+  }
+
+  // Blockquotes
+  blockquote {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-left: 4px solid var(--primary);
+    background-color: var(--muted);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-style: italic;
+    color: var(--muted-foreground);
+  }
+
+  // Lists
+  ul,
+  ol {
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-xl);
+
+    li {
+      margin: var(--spacing-sm) 0;
+    }
+  }
+
+  // Tables
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: var(--spacing-md) 0;
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: var(--spacing-sm) var(--spacing-md);
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--muted);
+    }
+  }
+
+  // Horizontal rule
+  hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border);
+    margin: var(--spacing-xl) 0;
+  }
+
+  // Images
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  // Strong and emphasis
+  strong,
+  b {
+    font-weight: 600;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  // Success elements - uses our global success colors instead of external CSS hardcoded values
+  // This resolves conflicts between markdown success styling and our toast success colors
+  .success,
+  [data-success],
+  .alert-success {
+    color: var(--success-foreground);
+    background-color: var(--success);
+    border-color: var(--success);
+  }
+
+  // Ensure no conflicts with our global theme
+  * {
+    box-sizing: border-box;
+  }
+}
+
+
+
+// =============================================================================
+// Component Styles
+// =============================================================================
+
+// Mermaid Chart Styles
+.mermaid {
+  display: block !important;
+  text-align: center;
+  margin: var(--spacing-xl) 0;
+  background: white;
+
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  min-height: 100px;
+
+  svg {
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+
+}
+
+.dark .mermaid {
+  background: rgb(136, 197, 136);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+// Mermaid Wrapper Styles
+.mermaid-wrapper {
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+
+  transition: all 0.2s ease;
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+  &:hover,
+  &.hover {
+    cursor: grab;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  &.panning {
+    cursor: grabbing;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+
+}
+
+.dark .mermaid-wrapper {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  &:hover,
+  &.hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+}
+
+// =============================================================================
+// Mathpix Markdown Styles
+// =============================================================================
+
+.mathpix-markdown {
+  font-family: var(--font-sans);
+  line-height: var(--line-height-normal);
+  //color: var(--foreground);
+
+  // Enhanced MathJax styling
+  .mjx-container {
+    font-family: var(--font-math);
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    display: inline-block;
+    line-height: 0;
+    text-align: left;
+    text-indent: 0;
+    text-rendering: auto;
+    text-transform: none;
+    word-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    float: none;
+    direction: ltr;
+    max-width: none;
+    max-height: none;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    position: relative;
+    overflow: visible;
+  }
+
+  .mjx-math {
+    font-family: var(--font-math);
+    display: inline-block;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+    text-indent: 0;
+    text-rendering: auto;
+    text-transform: none;
+    word-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    float: none;
+    direction: ltr;
+    max-width: none;
+    max-height: none;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    position: relative;
+  }
+
+  // MathJax SVG styling
+  .MathJax_SVG {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+  }
+
+  // MathJax display math styling
+  .MathJax_Display {
+    text-align: center;
+    margin: 1em 0;
+    position: relative;
+    text-indent: 0;
+    text-rendering: auto;
+    text-transform: none;
+    word-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    float: none;
+    direction: ltr;
+    max-width: none;
+    max-height: none;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+  }
+
+  // MathJax inline math styling
+  .MathJax {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+  }
+
+  // Dark mode support for MathJax
+  .dark .MathJax_SVG {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  .dark .mjx-container {
+    color: var(--foreground);
+  }
+
+  .dark .mjx-math {
+    color: var(--foreground);
+  }
+
+  // Math styling
+  .math-inline {
+    display: inline-block;
+    margin: 0 2px;
+    vertical-align: middle;
+  }
+
+  .math-display {
+    display: block;
+    text-align: center;
+    margin: var(--spacing-xl) 0;
+    padding: var(--spacing-lg);
+    background: var(--muted);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--primary);
+    overflow-x: auto;
+  }
+
+  // Table styling
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: var(--spacing-xl) 0;
+    border: 1px solid var(--border);
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: var(--spacing-sm) var(--spacing-md);
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--muted);
+      font-weight: 600;
+    }
+  }
+
+  // Code styling
+  pre {
+    background-color: var(--muted);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+
+  code {
+    background-color: var(--muted);
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  // Blockquote styling
+  blockquote {
+    border-left: 4px solid var(--primary);
+    margin: var(--spacing-xl) 0;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background-color: var(--muted);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-style: italic;
+  }
+
+  // List styling
+  ul,
+  ol {
+    padding-left: var(--spacing-xxl);
+    margin: var(--spacing-lg) 0;
+
+    li {
+      margin: var(--spacing-sm) 0;
+    }
+  }
+
+  // Heading styling
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: var(--spacing-xxl) 0 var(--spacing-lg) 0;
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    color: var(--foreground);
+  }
+
+  h1 {
+    font-size: var(--font-size-4xl);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  h2 {
+    font-size: var(--font-size-3xl);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  h3 {
+    font-size: var(--font-size-2xl);
+  }
+
+  // Paragraph styling
+  p {
+    margin: var(--spacing-lg) 0;
+    line-height: var(--line-height-normal);
+  }
+
+  // Link styling
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-bottom-color 0.2s ease;
+
+    &:hover {
+      border-bottom-color: var(--primary);
+    }
+  }
+
+  // Image styling
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  // Horizontal rule styling
+  hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: var(--spacing-xxl) 0;
+  }
+
+  // Emphasis styling
+  strong {
+    font-weight: 700;
+    color: var(--foreground);
+  }
+
+  em {
+    font-style: italic;
+    color: var(--muted-foreground);
+  }
+
+  // Strikethrough styling
+  strike {
+    text-decoration: line-through;
+    color: var(--muted-foreground);
+  }
+
+  // Abbreviation styling
+  abbr {
+    border-bottom: 1px dotted var(--border);
+    cursor: help;
+  }
+
+  // Definition list styling
+  dl {
+    margin: var(--spacing-xl) 0;
+
+    dt {
+      font-weight: 600;
+      color: var(--foreground);
+      margin-top: var(--spacing-lg);
+    }
+
+    dd {
+      margin-left: var(--spacing-xl);
+      margin-top: var(--spacing-sm);
+      color: var(--muted-foreground);
+    }
+  }
+
+  // Footnote styling
+  .footnote {
+    font-size: 0.9em;
+    color: var(--muted-foreground);
+    border-top: 1px solid var(--border);
+    margin-top: var(--spacing-xxl);
+    padding-top: var(--spacing-lg);
+  }
+
+  .footnote-ref {
+    font-size: 0.8em;
+    vertical-align: super;
+    color: var(--primary);
+  }
+
+  // Chemistry SMILES styling
+  .smiles {
+    font-family: var(--font-mono);
+    background-color: var(--muted);
+    padding: 4px var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  // Theorem and proof styling
+  .theorem {
+    background-color: var(--muted);
+    border-left: 4px solid var(--chart-1);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-xl) 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+
+    .theorem-title {
+      font-weight: 600;
+      color: var(--chart-1);
+      margin-bottom: var(--spacing-md);
+      font-size: 1.1em;
+    }
+  }
+
+  .proof {
+    background-color: var(--muted);
+    border-left: 4px solid var(--chart-2);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-xl) 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+
+    .proof-title {
+      font-weight: 600;
+      color: var(--chart-2);
+      margin-bottom: var(--spacing-md);
+      font-size: 1.1em;
+    }
+  }
+
+  // Abstract styling
+  .abstract {
+    background-color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-xxl) 0;
+    font-style: italic;
+
+    .abstract-title {
+      font-weight: 600;
+      margin-bottom: var(--spacing-md);
+      color: var(--foreground);
+    }
+  }
+
+  // Author list styling
+  .authors {
+    text-align: center;
+    margin: var(--spacing-xl) 0;
+    color: var(--muted-foreground);
+    font-style: italic;
+  }
+
+  // Section styling
+  .section {
+    margin: var(--spacing-xxl) 0;
+
+    .section-title {
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: var(--spacing-lg);
+    }
+  }
+}
+
+// =============================================================================
+// Responsive Design
+// =============================================================================
+
+@media (min-width: 768px) {
+  .mathpix-markdown {
+    font-size: 0.95em;
+
+    h1 {
+      font-size: 1.75em;
+    }
+
+    h2 {
+      font-size: 1.4em;
+    }
+
+    pre {
+      padding: var(--spacing-md);
+    }
+
+    blockquote {
+      padding: var(--spacing-md) var(--spacing-lg);
+    }
   }
 }

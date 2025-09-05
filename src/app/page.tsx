@@ -172,6 +172,9 @@ function HomeContent({
       setMarkdown(decodedContent);
       onViewModeChange("fullscreen");
       onActiveTabChange("preview");
+      toast.success("Switched to Fullscreen Preview Mode", {
+        description: "Content loaded from URL. Press 'Q' to return to split view."
+      });
     }
   }, [contentParam, onViewModeChange, onActiveTabChange]);
 
@@ -181,6 +184,9 @@ function HomeContent({
       setMarkdown(contentToLoad);
       onViewModeChange("fullscreen");
       onActiveTabChange("preview");
+      toast.success("Switched to Fullscreen Preview Mode", {
+        description: "Document loaded. Press 'Q' to return to split view."
+      });
       // Notify that content has been loaded
       onContentLoaded?.();
     }
@@ -207,7 +213,7 @@ function HomeContent({
         onActiveTabChange("preview");
         // Show success notification
         toast.success(`File "${file.name}" loaded successfully!`, {
-          description: "Switched to fullscreen preview mode."
+          description: "Switched to fullscreen preview mode. Press 'Q' to return to split view."
         });
       }
     };
@@ -269,7 +275,6 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
   const [currentMarkdown, setCurrentMarkdown] = useState(SAMPLE_MARKDOWN);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [isDragOver, setIsDragOver] = useState(false);
-  const [showFullscreenMessage, setShowFullscreenMessage] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [lastSharedUrl, setLastSharedUrl] = useState<string | null>(null);
   const [showUrlDialog, setShowUrlDialog] = useState(false);
@@ -378,9 +383,10 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
     if (viewMode === "fullscreen" && activeTab === "preview") {
       // Scroll to top of the page for better fullscreen experience
       window.scrollTo({ top: 0, behavior: "smooth" });
-      // Show fullscreen message briefly
-      setShowFullscreenMessage(true);
-      setTimeout(() => setShowFullscreenMessage(false), 2000);
+      // Show toast notification for fullscreen mode
+      toast.success("Switched to Fullscreen Preview Mode", {
+        description: "Press 'Q' to return to split view or 'E' to edit"
+      });
     }
   }, [viewMode, activeTab]);
 
@@ -403,6 +409,9 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
         case "w":
           event.preventDefault();
           setViewMode("fullscreen");
+          toast.success("Switched to Fullscreen Preview Mode", {
+            description: "Press 'Q' to return to split view or 'E' to edit"
+          });
           break;
         case "e":
           event.preventDefault();
@@ -440,16 +449,16 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
     <Layout className={cn(
       "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
       viewMode === "fullscreen" &&
-        activeTab === "preview" &&
-        "bg-gradient-to-br from-background to-muted/20",
+      activeTab === "preview" &&
+      "bg-gradient-to-br from-background to-muted/20",
     )}>
       <header
         className={cn(
           "border-b sticky top-0 z-50 bg-background transition-all duration-300 ease-in-out",
           isDragOver && "bg-primary/5 border-primary/50",
           viewMode === "fullscreen" &&
-            activeTab === "preview" &&
-            "bg-background border-primary/20",
+          activeTab === "preview" &&
+          "bg-background border-primary/20",
         )}
       >
         <div className="mx-auto container flex h-16 items-center px-4">
@@ -463,9 +472,9 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
           </div>
 
           <div className="flex gap-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onNavigate?.('doc')}
             >
               View Documents
@@ -539,7 +548,12 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
             <Button
               variant={viewMode === "fullscreen" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode("fullscreen")}
+              onClick={() => {
+                setViewMode("fullscreen");
+                toast.success("Switched to Fullscreen Preview Mode", {
+                  description: "Press 'Q' to return to split view or 'E' to edit"
+                });
+              }}
               className="flex items-center gap-2"
             >
               <Maximize2 className="h-4 w-4" />
@@ -550,17 +564,6 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
         </div>
       </header>
 
-      {/* Fullscreen Preview Mode Message */}
-      {showFullscreenMessage && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
-          <div className="flex items-center gap-2">
-            <Eye className="h-5 w-5" />
-            <span className="font-medium">
-              Switched to Fullscreen Preview Mode
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Last Shared URL Display */}
       {lastSharedUrl && (
@@ -647,44 +650,41 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
             <DialogTitle>Shared URL</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                URL to share:
-              </label>
-              <div className="mt-2 p-3 bg-muted rounded-md">
-                <code className="text-sm break-all">{lastSharedUrl}</code>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  if (lastSharedUrl) {
-                    navigator.clipboard.writeText(lastSharedUrl);
-                    toast.success("URL copied to clipboard!");
-                  }
-                }}
-                className="flex-1"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy URL
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (lastSharedUrl) {
-                    window.open(lastSharedUrl, "_blank");
-                  }
-                }}
-                className="flex-1"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open URL
-              </Button>
+            <label className="text-sm font-medium text-muted-foreground">
+              URL to share:
+            </label>
+            <div className="mt-2 p-3 bg-muted rounded-md">
+              <code className="text-sm break-all">{lastSharedUrl}</code>
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Close</Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    if (lastSharedUrl) {
+                      navigator.clipboard.writeText(lastSharedUrl);
+                      toast.success("URL copied to clipboard!");
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy URL
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (lastSharedUrl) {
+                      window.open(lastSharedUrl, "_blank");
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open URL
+                </Button>
+              </div>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
