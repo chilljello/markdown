@@ -1,4 +1,4 @@
-# Markdown Mermaid Viewer
+# Markdown
 
 A modern Next.js application for viewing and editing Markdown content with Mermaid diagram support, optimized for Bun.
 
