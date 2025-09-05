@@ -832,6 +832,31 @@ button {
 }
 
 // =============================================================================
+// Basic Math Rendering Fallback Styles
+// =============================================================================
+
+.math-inline {
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+  font-size: 0.9em;
+}
+
+.math-display {
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.5em;
+  border-radius: 0.3em;
+  margin: 1em 0;
+  text-align: center;
+  font-size: 1.1em;
+  border-left: 3px solid var(--primary);
+}
+
+// =============================================================================
 // Mathpix Markdown Styles
 // =============================================================================
 

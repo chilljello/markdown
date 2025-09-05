@@ -4,29 +4,10 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
 import { cn } from "../lib/utils";
 import mermaid from "mermaid";
-import DOMPurify from "dompurify";
-import MarkdownIt from 'markdown-it';
+import { marked } from 'marked';
+import { usePanZoom } from '../hooks/use-pan-zoom';
+import { useMermaid } from '../hooks/use-mermaid';
 
-// Safe import with fallback for mathpix-markdown-it
-let MM: any = null;
-let mathpixMarkdownPlugin: any = null;
-
-try {
-    const mathpixModule = require('mathpix-markdown-it');
-    MM = mathpixModule.MathpixMarkdownModel;
-    mathpixMarkdownPlugin = mathpixModule.mathpixMarkdownPlugin;
-    
-    // Check if the required methods are available
-    if (!MM || typeof MM.getMathpixFontsStyle !== 'function' || typeof MM.getMathpixStyle !== 'function') {
-        console.warn('MathpixMarkdownModel methods not available, falling back to basic markdown rendering');
-        MM = null;
-        mathpixMarkdownPlugin = null;
-    }
-} catch (error) {
-    console.warn('Failed to load mathpix-markdown-it, falling back to basic markdown rendering:', error);
-    MM = null;
-    mathpixMarkdownPlugin = null;
-}
 
 // Initialize mermaid with better error handling
 mermaid.initialize({
@@ -36,61 +17,21 @@ mermaid.initialize({
     logLevel: 'error'
 });
 
-// Initialize markdown-it with conditional mathpix-markdown-it support
-const md = new MarkdownIt({
-    html: true,
-    breaks: true,
-    linkify: true,
-    typographer: true
-});
+// Create a custom renderer to preserve math delimiters
+const renderer = new marked.Renderer();
 
-// Only use mathpix plugin if it's available
-if (mathpixMarkdownPlugin) {
-    try {
-        md.use(mathpixMarkdownPlugin, {
-            outMath: {
-                include_mathml: false,
-                include_asciimath: false,
-                include_latex: false,
-                include_svg: true,
-                include_tsv: true,
-                include_table_html: true,
-            },
-            htmlSanitize: {
-                allowedTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
-                    'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'abbr', 'code', 'hr', 'br', 'div',
-                    'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'u', 'span', 'math',
-                    'mjx-container', 'mjx-math', 'mjx-mscript', 'mjx-mo', 'mjx-mi', 'mjx-mn', 'mjx-mfrac',
-                    'mjx-msqrt', 'mjx-msup', 'mjx-msub', 'mjx-mrow', 'mjx-mtext', 'mjx-mspace'],
-                allowedAttributes: {
-                    a: ['href', 'name', 'target'],
-                    img: ['src', 'alt', 'title', 'width', 'height'],
-                    span: ['class', 'style'],
-                    div: ['class', 'id', 'style'],
-                    math: ['xmlns'],
-                    mjx: ['class', 'jax', 'display', 'style']
-                },
-                allowedSchemes: ['http', 'https', 'ftp', 'mailto', 'data'],
-                allowProtocolRelative: true
-            },
-            codeHighlight: {
-                auto: true,
-                code: true
-            },
-            enable_markdown: true,
-            enable_latex: true,
-            enable_markdown_mmd_extensions: true,
-            accessibility: {
-                assistiveMml: true
-            }
-        });
-        console.log('Mathpix-markdown-it plugin loaded successfully');
-    } catch (error) {
-        console.warn('Failed to initialize mathpix-markdown-it plugin:', error);
-    }
-} else {
-    console.log('Using basic markdown-it without mathpix enhancements');
-}
+// Override the text renderer to preserve math delimiters
+renderer.text = function(text) {
+    // Don't escape backslashes in math delimiters
+    return String(text.raw || text);
+};
+
+// Configure marked with custom renderer
+marked.setOptions({
+    breaks: false,
+    gfm: true,
+    renderer: renderer
+});
 
 interface MarkdownViewerProps {
     content: string;
@@ -102,25 +43,24 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     const [processedHtml, setProcessedHtml] = React.useState<string>("");
     const [isMounted, setIsMounted] = React.useState(false);
 
-    // Function to sanitize mermaid code blocks to prevent parsing issues
-    const sanitizeMermaidCode = (code: string): string => {
-        // Normalize line endings (convert CRLF to LF)
-        let sanitized = code.replace(/\r\n/g, '\n');
-        if (sanitized.includes('gantt')) {
-            // Remove multiple consecutive newlines with a single newline
-            sanitized = sanitized.replace(/\n\s*\n+/g, '\n');
-        }
-        return sanitized;
-    };
 
-    // Function to process markdown with markdown-it and custom mermaid handling
-    const processMarkdown = useCallback(async () => {
+    // Function to process markdown with marked and custom mermaid handling
+    const processMarkdown = useCallback(() => {
         try {
             if (!content.trim()) {
                 return "";
             }
 
-            // Replace mermaid code blocks with special divs before rendering
+            console.log('=== MARKED PROCESSING DEBUG ===');
+            console.log('Original content sample:', content.substring(0, 200));
+            console.log('Contains math delimiters:', {
+                hasDollarInline: content.includes('$') && !content.includes('$$'),
+                hasDollarDisplay: content.includes('$$'),
+                hasParentheses: content.includes('\\('),
+                hasBrackets: content.includes('\\[')
+            });
+
+            // Replace mermaid code blocks with special divs
             const processedContent = content.replace(
                 /```mermaid\n([\s\S]*?)```/g,
                 (_, code) => {
@@ -130,287 +70,175 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 }
             );
 
-            // Render the markdown content using markdown-it
-            const renderedHtml = md.render(processedContent);
+            // Render the markdown content using marked with custom renderer
+            console.log('Processing content with marked (custom renderer):', processedContent.substring(0, 200) + '...');
             
-            // Get MathJax styles from mathpix-markdown-it if available
-            let mathjaxStyles = '';
-            if (MM && typeof MM.getMathpixFontsStyle === 'function' && typeof MM.getMathpixStyle === 'function') {
-                try {
-                    mathjaxStyles = MM.getMathpixFontsStyle() + MM.getMathpixStyle(true);
-                } catch (error) {
-                    console.warn('Failed to get MathJax styles from mathpix-markdown-it:', error);
-                    mathjaxStyles = '';
-                }
-            }
+            let renderedHtml = marked.parse(processedContent) as string;
+            console.log('Marked render completed, HTML length:', renderedHtml.length);
+            console.log('Rendered HTML sample:', renderedHtml.substring(0, 500) + '...');
             
-            // Sanitize the HTML to prevent XSS attacks, including MathJax elements
-            const sanitizedHtml = DOMPurify.sanitize(renderedHtml, {
-                ALLOWED_TAGS: [
-                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                    'p', 'br', 'hr',
-                    'ul', 'ol', 'li',
-                    'blockquote', 'pre', 'code',
-                    'em', 'strong', 'del', 'ins',
-                    'a', 'img',
-                    'table', 'thead', 'tbody', 'tr', 'th', 'td',
-                    'div', 'span',
-                    'math', 'mrow', 'mi', 'mn', 'mo', 'msup', 'msub', 'mfrac', 'msqrt',
-                    'svg', 'path', 'g', 'text', 'rect', 'circle', 'line', 'polygon',
-                    'mjx-container', 'mjx-math', 'mjx-mscript', 'mjx-mo', 'mjx-mi', 'mjx-mn', 
-                    'mjx-mfrac', 'mjx-msqrt', 'mjx-msup', 'mjx-msub', 'mjx-mrow', 'mjx-mtext', 'mjx-mspace'
-                ],
-                ALLOWED_ATTR: [
-                    'href', 'src', 'alt', 'title', 'class', 'id', 'style',
-                    'width', 'height', 'viewBox', 'd', 'x', 'y', 'fill', 'stroke',
-                    'stroke-width', 'stroke-linecap', 'stroke-linejoin',
-                    'jax', 'display', 'xmlns'
-                ]
+            // Check what happened to math delimiters after marked processing
+            console.log('Math delimiters after marked:', {
+                hasDollarInline: renderedHtml.includes('$') && !renderedHtml.includes('$$'),
+                hasDollarDisplay: renderedHtml.includes('$$'),
+                hasParentheses: renderedHtml.includes('\\('),
+                hasBrackets: renderedHtml.includes('\\[')
             });
-
-            // Combine MathJax styles with rendered HTML if available
-            return mathjaxStyles ? `<style>${mathjaxStyles}</style>${sanitizedHtml}` : sanitizedHtml;
+            
+            console.log('Final HTML sample:', renderedHtml.substring(0, 500) + '...');
+            return renderedHtml;
         } catch (error) {
             console.error("Error processing markdown:", error);
             return `<div class="error">Error processing markdown content: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
         }
     }, [content]);
 
-    // Function to update the transform of the SVG
-    const updateTransform = useCallback((svgElement: SVGElement, translate: { x: number, y: number }, scale: number) => {
-        if (!isMounted || !svgElement.isConnected) return;
-        svgElement.style.transform = `translate(${translate.x}px, ${translate.y}px) scale(${scale})`;
-        svgElement.style.transformOrigin = 'center';
-    }, [isMounted]);
+    // Use the pan and zoom hook
+    const { addPanZoomToChart } = usePanZoom({
+        minScale: 0.5,
+        maxScale: 10,
+        zoomFactor: 0.1,
+        resetOnMouseLeave: true
+    });
 
-    // Function to add pan and zoom functionality to a Mermaid chart
-    const addPanZoomToChart = useCallback((svgElement: SVGElement) => {
-        let isPanning = false;
-        let startPoint = { x: 0, y: 0 };
-        let currentTranslate = { x: 0, y: 0 };
-        let currentScale = 1;
-        let isHovering = false;
-        
-        // Create a wrapper div for the SVG if it doesn't exist
-        let wrapper = svgElement.parentElement;
-        if (!wrapper || !wrapper.classList.contains('mermaid-wrapper')) {
-            wrapper = document.createElement('div');
-            wrapper.className = 'mermaid-wrapper';
-            // Check if the SVG is still in the DOM before manipulating it
-            if (svgElement.parentNode && svgElement.isConnected) {
-                svgElement.parentNode.insertBefore(wrapper, svgElement);
-                wrapper.appendChild(svgElement);
-                // Ensure the SVG takes full width and height of wrapper
-                svgElement.style.width = '100%';
-                svgElement.style.height = '100%';
-                svgElement.style.margin = '0';
-                svgElement.style.padding = '0';
-                svgElement.style.display = 'block';
-            } else {
-                console.log('SVG element no longer in DOM, skipping wrapper creation');
-                return;
-            }
-
-            // Only add event listeners if the component is still mounted
-            if (!isMounted) {
-                console.log('Component unmounted, skipping event listener setup');
-                return;
-            }
-        }
-
-        // Function to enable pan and zoom
-        const enablePanZoom = () => {
-            if (!isHovering || !isMounted) return;
-            wrapper!.style.cursor = 'grab';
-            wrapper!.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        };
-
-        // Function to disable pan and zoom
-        const disablePanZoom = () => {
-            if (!isMounted) return;
-            isPanning = false;
-            wrapper!.style.cursor = 'default';
-            wrapper!.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-        };
-
-        // Hover events to trigger pan and zoom functionality
-        wrapper!.addEventListener('mouseenter', () => {
-            if (!isMounted) return;
-            isHovering = true;
-            enablePanZoom();
-        });
-
-        wrapper!.addEventListener('mouseleave', () => {
-            if (!isHovering || !isMounted) return;
-            isHovering = false;
-            disablePanZoom();
-            // Reset transform when leaving
-            currentTranslate = { x: 0, y: 0 };
-            currentScale = 1;
-            updateTransform(svgElement, currentTranslate, currentScale);
-        });
-
-        // Mouse event listeners for panning (only active when hovering)
-        wrapper!.addEventListener('mousedown', (e) => {
-            if (!isHovering || e.button !== 0 || !isMounted) return; // Only left mouse button and when hovering
-            
-            isPanning = true;
-            startPoint = { x: e.clientX, y: e.clientY };
-            wrapper!.style.cursor = 'grabbing';
-            e.preventDefault();
-        });
-
-        wrapper!.addEventListener('mousemove', (e) => {
-            if (!isHovering || !isPanning || !isMounted) return;
-            
-            const deltaX = e.clientX - startPoint.x;
-            const deltaY = e.clientY - startPoint.y;
-            
-            currentTranslate.x += deltaX;
-            currentTranslate.y += deltaY;
-            
-            startPoint = { x: e.clientX, y: e.clientY };
-            
-            updateTransform(svgElement, currentTranslate, currentScale);
-        });
-
-        wrapper!.addEventListener('mouseup', () => {
-            if (!isHovering || !isMounted) return;
-            isPanning = false;
-            wrapper!.style.cursor = 'grab';
-        });
-
-        // Wheel event for zooming (only active when hovering)
-        wrapper!.addEventListener('wheel', (e) => {
-            if (!isHovering || !isMounted) return;
-            
-            e.preventDefault();
-            
-            const zoomFactor = 0.1;
-            const delta = e.deltaY > 0 ? -zoomFactor : zoomFactor;
-            
-            currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
-            
-            updateTransform(svgElement, currentTranslate, currentScale);
-        });
-
-        // Double-click to reset (only active when hovering)
-        wrapper!.addEventListener('dblclick', () => {
-            if (!isHovering || !isMounted) return;
-            
-            currentTranslate = { x: 0, y: 0 };
-            currentScale = 1;
-            updateTransform(svgElement, currentTranslate, currentScale);
-        });
-    }, [isMounted, updateTransform]);
+    // Use the mermaid hook
+    const { renderMermaidDiagrams, sanitizeMermaidCode } = useMermaid({
+        domDelay: 100,
+        panZoomDelay: 200,
+        fallbackDelay: 300,
+        enableLogging: true
+    });
 
 
-    // Function to render mermaid diagrams
-    const renderMermaidDiagrams = useCallback(async () => {
-        // Double-check that the ref is still valid
-        if (!containerRef.current || !isMounted) {
-            console.log('Container ref not ready or component unmounted, skipping mermaid rendering');
-            return;
-        }
-        
-        try {
-            console.log('Attempting to render mermaid diagrams...');
-            
-            // Wait for DOM to be fully updated
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Check again after the delay
-            if (!containerRef.current || !isMounted) {
-                console.log('Container ref lost after delay, skipping mermaid rendering');
-                return;
-            }
-            
-            const mermaidElements = containerRef.current.querySelectorAll('.mermaid');
-            console.log(`Found ${mermaidElements.length} mermaid elements`);
-            
-            if (mermaidElements.length === 0) return;
-            
-            // Log the content of each mermaid element
-            mermaidElements.forEach((element, index) => {
-                console.log(`Mermaid element ${index}:`, element.textContent);
-            });
-            
-            // Render all mermaid diagrams
-            try {
-                await mermaid.run({
-                    nodes: Array.from(mermaidElements) as HTMLElement[]
-                });
-                
-                // Add pan and zoom functionality after rendering is complete
-                // Use a small delay to ensure DOM is fully updated
-                setTimeout(() => {
-                    if (containerRef.current && isMounted) {
-                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
-                        if (renderedSvgs) {
-                            renderedSvgs.forEach((svg) => {
-                                if (svg instanceof SVGElement) {
-                                    console.log('Adding pan and zoom to SVG:', svg);
-                                    addPanZoomToChart(svg);
-                                }
-                            });
-                        }
-                    }
-                }, 200);
-                
-            } catch (error) {
-                console.error("Error in mermaid.run:", error);
-                // Fallback: try to add pan and zoom to any existing SVGs
-                setTimeout(() => {
-                    if (containerRef.current && isMounted) {
-                        const renderedSvgs = containerRef.current.querySelectorAll('.mermaid svg');
-                        if (renderedSvgs) {
-                            renderedSvgs.forEach((svg) => {
-                                if (svg instanceof SVGElement) {
-                                    addPanZoomToChart(svg);
-                                }
-                            });
-                        }
-                    }
-                }, 300);
-            }
-            
-            console.log('Mermaid diagrams rendered successfully');
-            
-        } catch (error) {
-            console.error("Error rendering mermaid diagrams:", error);
-        }
-    }, [isMounted, addPanZoomToChart]);
 
     // Set mounted state when component mounts
     useEffect(() => {
+        console.log('Component mounting, setting isMounted to true');
         setIsMounted(true);
-        return () => setIsMounted(false);
+        return () => {
+            console.log('Component unmounting, setting isMounted to false');
+            setIsMounted(false);
+        };
     }, []);
 
     // Process markdown when content changes
     useEffect(() => {
+        console.log('Markdown processing useEffect triggered:', {
+            isMounted,
+            contentLength: content?.length || 0,
+            contentPreview: content?.substring(0, 100) + '...'
+        });
+        
         if (isMounted) {
-            processMarkdown().then(setProcessedHtml);
+            console.log('Processing markdown...');
+            const html = processMarkdown();
+                console.log('Markdown processing completed, setting processedHtml');
+                setProcessedHtml(html);
+        } else {
+            console.log('Skipping markdown processing - component not mounted');
         }
     }, [content, processMarkdown, isMounted]);
 
-    // Render mermaid diagrams after component updates
+    // Process math expressions with MathJax v4.0.0
+    const processMathExpressions = useCallback(() => {
+        try {
+            console.log('=== MATHJAX v4.0.0 CHTML PROCESSING DEBUG ===');
+            console.log('processMathExpressions called');
+            if (containerRef.current && (window as any).MathJax) {
+                console.log('MathJax v4.0.0 with CHTML output is available, processing math expressions...');
+                console.log('MathJax version:', (window as any).MathJax.version);
+                console.log('Container HTML sample:', containerRef.current.innerHTML.substring(0, 500));
+                
+                // Check what math delimiters are in the container before processing
+                const containerHTML = containerRef.current.innerHTML;
+                console.log('Math delimiters in container before MathJax:', {
+                    hasDollarInline: containerHTML.includes('$') && !containerHTML.includes('$$'),
+                    hasDollarDisplay: containerHTML.includes('$$'),
+                    hasParentheses: containerHTML.includes('\\('),
+                    hasBrackets: containerHTML.includes('\\[')
+                });
+                
+                // Process the entire container - MathJax v4.0.0 will find and process all math expressions
+                console.log('Calling MathJax.typesetPromise with container for CHTML output...');
+                
+                (window as any).MathJax.typesetPromise([containerRef.current]).then(() => {
+                    console.log('MathJax v4.0.0 CHTML processing completed successfully');
+                    
+                    // Check for processed math expressions (v4.0.0 CHTML output)
+                    const mathJaxElements = containerRef.current?.querySelectorAll('.MathJax, mjx-container, mjx-math, .mjx-chtml') || [];
+                    console.log(`Found ${mathJaxElements.length} MathJax v4.0.0 CHTML processed elements`);
+                    
+                    // Log some examples of processed math
+                    mathJaxElements.forEach((element, index) => {
+                        if (index < 3) { // Log first 3 elements
+                            console.log(`MathJax v4.0.0 CHTML element ${index + 1}:`, {
+                            tagName: element.tagName,
+                            className: element.className,
+                            innerHTML: element.innerHTML.substring(0, 100) + '...'
+                        });
+                        }
+                    });
+                    
+                    // Global notification for debug page
+                    if ((window as any).onMathJaxProcessingComplete) {
+                        (window as any).onMathJaxProcessingComplete(mathJaxElements.length);
+                    }
+                }).catch((error: any) => {
+                    console.error('MathJax v4.0.0 processing failed:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack
+                    });
+                });
+            } else if (!(window as any).MathJax) {
+                console.warn('MathJax v4.0.0 with CHTML output is not available on window object');
+            } else {
+                console.log('Container ref not available');
+            }
+        } catch (error) {
+            console.warn('Error processing math expressions:', error);
+        }
+    }, [processedHtml]);
+
+    // Render mermaid diagrams and process math after component updates
     useEffect(() => {
+        console.log('useEffect triggered with:', {
+            hasProcessedHtml: !!processedHtml,
+            hasContainerRef: !!containerRef.current,
+            isMounted,
+            processedHtmlLength: processedHtml?.length || 0
+        });
+        
         if (processedHtml && containerRef.current && isMounted) {
+            console.log('Starting mermaid and math processing...');
             // Add a small delay to ensure the DOM is fully updated
             const timer = setTimeout(() => {
-                renderMermaidDiagrams();
+                console.log('Timer fired, calling renderMermaidDiagrams...');
+                renderMermaidDiagrams(containerRef, isMounted, addPanZoomToChart);
+                // Process math expressions after mermaid rendering
+                setTimeout(() => {
+                    console.log('Timer fired, calling processMathExpressions...');
+                    processMathExpressions();
+                }, 200);
             }, 100);
-            
-            return () => clearTimeout(timer);
+
+            return () => {
+                console.log('Cleaning up timer...');
+                clearTimeout(timer);
+            };
+        } else {
+            console.log('Skipping mermaid and math processing due to missing conditions');
         }
-    }, [processedHtml, renderMermaidDiagrams, isMounted]);
+    }, [processedHtml, renderMermaidDiagrams, processMathExpressions, isMounted, addPanZoomToChart]);
 
     return (
         <Card className={cn("overflow-auto", className)}>
             <div
-                ref={containerRef}
-                className="markdown-body mathpix-markdown mathjax-container"
+                ref={(el) => {
+                    console.log('Container ref callback called:', { el, hasEl: !!el });
+                    containerRef.current = el;
+                }}
+                className="markdown-body mathjax-container"
                 dangerouslySetInnerHTML={{ __html: processedHtml }}
             />
         </Card>

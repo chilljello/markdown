@@ -1,43 +1,33 @@
-declare module 'mathjax-full' {
-    interface MathJaxConfig {
-        tex?: {
-            inlineMath?: string[][];
-            displayMath?: string[][];
-            processEscapes?: boolean;
-            processEnvironments?: boolean;
-            packages?: string[];
-        };
-        svg?: {
-            fontCache?: string;
-            scale?: number;
-            minScale?: number;
-            mtextInheritFont?: boolean;
-        };
-        options?: {
-            enableMenu?: boolean;
-            menuOptions?: {
-                settings?: {
-                    texHints?: boolean;
-                    semantics?: boolean;
-                    zoom?: string;
-                    zoomFactor?: string;
-                };
-            };
-        };
-    }
-
-    interface MathJaxStartup {
-        defaultReady(): void;
-        defaultPageReady(): Promise<void>;
-        promise?: Promise<void>;
-    }
-
-    interface MathJax {
-        config: MathJaxConfig;
-        startup: MathJaxStartup;
-        typesetPromise(elements: NodeListOf<Element> | Element[]): Promise<void>;
-    }
-
-    const MathJax: MathJax;
-    export = MathJax;
+// TypeScript declarations for MathJax v4.0.0
+declare global {
+  interface Window {
+    MathJax: {
+      typesetPromise: (elements: HTMLElement[]) => Promise<void>;
+      config: any;
+      startup: {
+        ready: () => void;
+        defaultReady: () => void;
+      };
+      loader: {
+        load: string[];
+      };
+      tex: {
+        inlineMath: string[][];
+        displayMath: string[][];
+        processEscapes: boolean;
+        processEnvironments: boolean;
+        packages: string[];
+      };
+      chtml: {
+        scale: number;
+        minScale: number;
+      };
+      options: {
+        enableMenu: boolean;
+        menuOptions: any;
+      };
+      version: string;
+      [key: string]: any;
+    };
+  }
 }

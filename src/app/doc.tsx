@@ -49,6 +49,7 @@ import { DragDropZone } from '@/components/drag-drop-zone';
 import { getShareableUrl } from '@/lib/compression';
 import { getDecompressedContent } from '@/actions/file-actions';
 import { ThemeToggle } from '@/components/theme-toggle';
+// MathJaxProvider removed - using Mathpix for LaTeX rendering
 
 interface DocPageProps {
   onNavigate?: (route: 'home' | 'doc', content?: string) => void;
@@ -261,7 +262,7 @@ export default function DocPage({ onNavigate }: DocPageProps) {
 
 
   return (
-    <Layout>
+      <Layout>
       {/* Header */}
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4">

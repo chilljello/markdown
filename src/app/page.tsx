@@ -24,6 +24,7 @@ import {
 import { cn } from "../lib/utils";
 import { ThemeToggle } from "../components/theme-toggle";
 import { Layout } from "../components/layout";
+// MathJaxProvider removed - using Mathpix for LaTeX rendering
 import {
   getShareableUrl,
   getCompressionStats,
@@ -43,7 +44,28 @@ import {
 // Sample markdown with Mermaid diagram for demonstration
 const SAMPLE_MARKDOWN = `# Markdown Mermaid Viewer
 
+
+
 Welcome to the Markdown Mermaid Viewer! This tool allows you to:
+
+
+
+Below is the GitHub Markdown rendering of the provided whitepaper on Polynomial Perpetual Contracts (PPCs). The document has been formatted to adhere to GitHub's Markdown syntax, including LaTeX for equations, IEEE-style references, and a clear structure. The corrected short-side PnL has been integrated as specified. You can copy this into a README.md or paper.md file in a GitHub repository for proper rendering with MathJax support.
+Polynomial Perpetual Contracts: A Dynamic, Volatility-Adaptive Framework with Real-Time Convexity-Adjusted Funding
+Author(s): [Your Name]
+Affiliation: [Your Affiliation or Independent Researcher]
+Email: [Your Email]  
+Abstract
+Polynomial Perpetual Contracts (PPCs) extend perpetual futures with non-linear payoffs of the form 
+a \cdot S^n
+ (long) and 
+b \cdot T^{-m}
+ (short), enabling customizable risk profiles in volatile cryptocurrency markets. Non-linear payoffs introduce positive convexity for 
+n, m > 1
+, favoring longs, and concavity for 
+n, m < 1
+,
+
 
 - Write and edit Markdown content
 - Render Mermaid diagrams inside your Markdown
@@ -112,13 +134,6 @@ classDiagram
         +run()
     }
 \`\`\`
-
-## How to Use
-
-1. Write your Markdown in the editor
-2. Include Mermaid diagrams using the \`\`\`mermaid code fence
-3. Switch to the preview tab to see the rendered result
-4. Import or export your work using the buttons below
 `;
 
 function HomeContent({
@@ -446,12 +461,12 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
   }, [handleCopy, activeTab]);
 
   return (
-    <Layout className={cn(
-      "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
-      viewMode === "fullscreen" &&
-      activeTab === "preview" &&
-      "bg-gradient-to-br from-background to-muted/20",
-    )}>
+      <Layout className={cn(
+        "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
+        viewMode === "fullscreen" &&
+        activeTab === "preview" &&
+        "bg-gradient-to-br from-background to-muted/20",
+      )}>
       <header
         className={cn(
           "border-b sticky top-0 z-50 bg-background transition-all duration-300 ease-in-out",
