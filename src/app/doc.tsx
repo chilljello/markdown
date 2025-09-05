@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -40,22 +39,19 @@ import {
   Calendar,
   HardDrive,
   AlertTriangle,
-  Eye,
-  FileEdit,
   Clock,
   FolderOpen,
   Settings,
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { MarkdownViewer } from '@/components/markdown-viewer';
-import { MarkdownEditor } from '@/components/markdown-editor';
-import { getCompressionStats } from '@/lib/compression';
+import { DragDropZone } from '@/components/drag-drop-zone';
+import { getShareableUrl } from '@/lib/compression';
 import { getDecompressedContent } from '@/actions/file-actions';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 interface DocPageProps {
-  onNavigate?: (route: 'home' | 'doc') => void;
+  onNavigate?: (route: 'home' | 'doc', content?: string) => void;
 }
 
 export default function DocPage({ onNavigate }: DocPageProps) {
@@ -98,24 +94,10 @@ export default function DocPage({ onNavigate }: DocPageProps) {
   const [renameValue, setRenameValue] = useState('');
   const [importData, setImportData] = useState('');
   const [selectedFileForAction, setSelectedFileForAction] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'browse' | 'edit' | 'preview'>('browse');
-  const [editorContent, setEditorContent] = useState('');
 
   // Filtered files based on search
   const filteredFiles = searchQuery ? searchFiles(searchQuery) : files;
 
-  // Update editor content when current file changes
-  useEffect(() => {
-    if (currentFile) {
-      // Get decompressed content for editing
-      const decompressedContent = currentFile.isCompressed 
-        ? getDecompressedContent(currentFile)
-        : currentFile.content;
-      setEditorContent(decompressedContent);
-    } else {
-      setEditorContent('');
-    }
-  }, [currentFile]);
 
   // Handle create file
   const handleCreateFile = async () => {
@@ -237,30 +219,28 @@ export default function DocPage({ onNavigate }: DocPageProps) {
     }
   };
 
-  // Handle content changes in editor
-  const handleContentChange = (content: string) => {
-    setEditorContent(content);
-    
-    // Auto-save to current file if one is selected
-    if (currentFile) {
-      updateFile(currentFile.id, content).catch(console.error);
-    }
-  };
-
-  // Handle save with metadata
-  const handleSaveWithMetadata = async () => {
-    if (!currentFile) {
-      toast.error('No file selected');
-      return;
-    }
-
+  // Handle file drop for creating new documents
+  const handleFileDrop = async (file: File) => {
     try {
-      await saveFile(currentFile.id, currentFile.name, editorContent, currentFile.tags);
-      toast.success('File saved successfully');
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const content = e.target?.result as string;
+        if (content) {
+          // Extract filename without extension for the document name
+          const fileName = file.name.replace(/\.[^/.]+$/, "");
+          
+          // Create new document from dropped file
+          await createFile(fileName, content, []);
+          toast.success(`Document "${fileName}" created from file "${file.name}"`);
+        }
+      };
+      reader.readAsText(file);
     } catch (error) {
-      toast.error('Failed to save file');
+      console.error('Failed to process dropped file:', error);
+      toast.error('Failed to create document from dropped file');
     }
   };
+
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -279,8 +259,6 @@ export default function DocPage({ onNavigate }: DocPageProps) {
   // Check storage status
   const storageStatus = checkStorage();
 
-  // Get compression stats for current file
-  const compressionStats = currentFile ? getCompressionStats(editorContent) : null;
 
   return (
     <Layout>
@@ -291,7 +269,7 @@ export default function DocPage({ onNavigate }: DocPageProps) {
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold">Document Viewer</h1>
+                <h1 className="text-2xl font-bold">Drawer</h1>
                 <p className="text-sm text-muted-foreground">Manage and edit your markdown documents</p>
               </div>
             </div>
@@ -299,7 +277,7 @@ export default function DocPage({ onNavigate }: DocPageProps) {
               <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => onNavigate?.('home')}>
                 <FileText className="h-4 w-4 mr-2" />
-                Back to Home
+                Home
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowSettingsDialog(true)}>
                 <Settings className="h-4 w-4 mr-2" />
@@ -316,24 +294,8 @@ export default function DocPage({ onNavigate }: DocPageProps) {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="browse" className="flex items-center gap-2">
-              <FolderOpen className="h-4 w-4" />
-              Browse Documents
-            </TabsTrigger>
-            <TabsTrigger value="edit" className="flex items-center gap-2">
-              <FileEdit className="h-4 w-4" />
-              Edit Document
-            </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              Preview Document
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Browse Documents Tab */}
-          <TabsContent value="browse" className="space-y-6">
+        <DragDropZone onFileDrop={handleFileDrop} className="min-h-[600px]">
+          <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
@@ -458,7 +420,11 @@ export default function DocPage({ onNavigate }: DocPageProps) {
                           }`}
                           onClick={() => {
                             selectFile(file.id);
-                            setActiveTab('edit');
+                            // Navigate to home page with document content
+                            const content = file.isCompressed 
+                              ? getDecompressedContent(file)
+                              : file.content;
+                            onNavigate?.('home', content);
                           }}
                         >
                           <div className="flex items-start justify-between">
@@ -562,105 +528,8 @@ export default function DocPage({ onNavigate }: DocPageProps) {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Edit Document Tab */}
-          <TabsContent value="edit" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Edit Document</span>
-                  <div className="flex gap-2">
-                    {currentFile && (
-                      <>
-                        <Button onClick={handleSaveWithMetadata} size="sm">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Save
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setActiveTab('preview')}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Preview
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {currentFile ? (
-                  <div className="space-y-4">
-                    <div className="p-3 bg-muted rounded-md">
-                      <p className="text-sm text-muted-foreground">
-                        Editing: <span className="font-medium">{currentFile.name}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Last modified: {new Date(currentFile.updatedAt).toLocaleString()}
-                      </p>
-                      {compressionStats && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Compression: {compressionStats.compressionRatio.toFixed(1)}% reduction
-                          ({formatFileSize(compressionStats.originalSize)} → {formatFileSize(compressionStats.compressedSize)})
-                        </p>
-                      )}
-                    </div>
-                    <MarkdownEditor
-                      initialContent={editorContent}
-                      onSave={handleContentChange}
-                      className="min-h-[600px]"
-                      activeTab="edit"
-                      onViewModeChange={() => {}}
-                      onActiveTabChange={() => {}}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <FileEdit className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium mb-2">No document selected</p>
-                    <p className="mb-4">Select a document from the Browse tab to start editing</p>
-                    <Button onClick={() => setActiveTab('browse')}>
-                      <FolderOpen className="h-4 w-4 mr-2" />
-                      Browse Documents
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Preview Document Tab */}
-          <TabsContent value="preview" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preview Document</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {currentFile ? (
-                  <div className="space-y-4">
-                    <div className="p-3 bg-muted rounded-md">
-                      <p className="text-sm text-muted-foreground">
-                        Previewing: <span className="font-medium">{currentFile.name}</span>
-                      </p>
-                    </div>
-                    <MarkdownViewer 
-                      content={editorContent} 
-                      className="min-h-[600px] prose prose-lg max-w-none dark:prose-invert"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium mb-2">No document selected</p>
-                    <p>Select a document from the Browse tab to preview its content</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </DragDropZone>
 
         {/* Error display */}
         {error && (

@@ -45,7 +45,7 @@ export function MarkdownEditor({
   // Handle content changes
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-    onSave(e.target.value);
+    // Remove immediate save - let auto-save handle it
   };
 
   // Handle file import

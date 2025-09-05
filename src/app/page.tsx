@@ -127,12 +127,16 @@ function HomeContent({
   activeTab,
   onViewModeChange,
   onActiveTabChange,
+  contentToLoad,
+  onContentLoaded,
 }: {
   viewMode: "split" | "fullscreen";
   onCopy: (content: string) => void;
   activeTab: "edit" | "preview";
   onViewModeChange: (mode: "split" | "fullscreen") => void;
   onActiveTabChange: (tab: "edit" | "preview") => void;
+  contentToLoad?: string | null;
+  onContentLoaded?: () => void;
 }) {
   const contentParam = getSearchParam("content");
 
@@ -170,6 +174,18 @@ function HomeContent({
       onActiveTabChange("preview");
     }
   }, [contentParam, onViewModeChange, onActiveTabChange]);
+
+  // Handle content passed from navigation
+  useEffect(() => {
+    if (contentToLoad) {
+      setMarkdown(contentToLoad);
+      onViewModeChange("fullscreen");
+      onActiveTabChange("preview");
+      // Notify that content has been loaded
+      onContentLoaded?.();
+    }
+  }, [contentToLoad, onViewModeChange, onActiveTabChange, onContentLoaded]);
+
 
   // Pass the current markdown content to the copy function
   const handleSave = (content: string) => {
@@ -242,10 +258,12 @@ function HomeContent({
 }
 
 interface HomePageProps {
-  onNavigate?: (route: 'home' | 'doc') => void;
+  onNavigate?: (route: 'home' | 'doc', content?: string) => void;
+  contentToLoad?: string | null;
+  onContentLoaded?: () => void;
 }
 
-export default function HomePage({ onNavigate }: HomePageProps) {
+export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }: HomePageProps) {
   const [viewMode, setViewMode] = useState<"split" | "fullscreen">("fullscreen");
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentMarkdown, setCurrentMarkdown] = useState(SAMPLE_MARKDOWN);
@@ -609,6 +627,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           activeTab={activeTab}
           onViewModeChange={setViewMode}
           onActiveTabChange={setActiveTab}
+          contentToLoad={contentToLoad}
+          onContentLoaded={onContentLoaded}
         />
       </Suspense>
 

@@ -97,7 +97,7 @@ export function useFileManager(options: UseFileManagerOptions = {}): UseFileMana
     setTags(newTags);
   }, [files]);
 
-  // Auto-save functionality
+  // Auto-save functionality - only save when content actually changes
   useEffect(() => {
     if (autoSave && currentFile) {
       if (autoSaveTimer) {
@@ -106,7 +106,11 @@ export function useFileManager(options: UseFileManagerOptions = {}): UseFileMana
       
       const timer = setTimeout(() => {
         if (currentFile) {
-          updateFile(currentFile.id, currentFile.content).catch(console.error);
+          // Only save if content has actually changed
+          const existingFile = files.find(f => f.id === currentFile.id);
+          if (existingFile && existingFile.content !== currentFile.content) {
+            updateFile(currentFile.id, currentFile.content).catch(console.error);
+          }
         }
       }, autoSaveDelay);
       
@@ -118,7 +122,7 @@ export function useFileManager(options: UseFileManagerOptions = {}): UseFileMana
         clearTimeout(autoSaveTimer);
       }
     };
-  }, [currentFile?.content, autoSave, autoSaveDelay]);
+  }, [currentFile?.content, autoSave, autoSaveDelay, files]);
 
   // Refresh files from localStorage
   const refreshFiles = useCallback(() => {
