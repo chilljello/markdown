@@ -660,7 +660,7 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
 
       {/* URL Dialog */}
       <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-96">
           <DialogHeader>
             <DialogTitle>Shared URL</DialogTitle>
           </DialogHeader>

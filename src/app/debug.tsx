@@ -18,6 +18,8 @@ Here is display math:
 
 $$E = mc^2$$
 
+TVL: \\( \frac{dTVL}{dt} = \delta (N - N^*) \\)
+
 And another:
 
 $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
@@ -27,6 +29,8 @@ $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
 Here is inline math with parentheses: \\(\\frac{dP}{dt} \\to -\\infty\\)
 
 And another: \\(R(N) = I \\cdot S \\cdot \\frac{1}{N} + k \\cdot U > C\\)
+
+And your specific expression: \\( \\frac{dTVL}{dt} = \\delta (N - N^*) \\)
 
 ## Test 4: Display Math with Brackets
 

@@ -21,7 +21,7 @@ mermaid.initialize({
 const renderer = new marked.Renderer();
 
 // Override the text renderer to preserve math delimiters
-renderer.text = function(text) {
+renderer.text = function (text) {
     // Don't escape backslashes in math delimiters
     return String(text.raw || text);
 };
@@ -72,11 +72,11 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
             // Render the markdown content using marked with custom renderer
             console.log('Processing content with marked (custom renderer):', processedContent.substring(0, 200) + '...');
-            
+
             let renderedHtml = marked.parse(processedContent) as string;
             console.log('Marked render completed, HTML length:', renderedHtml.length);
             console.log('Rendered HTML sample:', renderedHtml.substring(0, 500) + '...');
-            
+
             // Check what happened to math delimiters after marked processing
             console.log('Math delimiters after marked:', {
                 hasDollarInline: renderedHtml.includes('$') && !renderedHtml.includes('$$'),
@@ -84,7 +84,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 hasParentheses: renderedHtml.includes('\\('),
                 hasBrackets: renderedHtml.includes('\\[')
             });
-            
+
             console.log('Final HTML sample:', renderedHtml.substring(0, 500) + '...');
             return renderedHtml;
         } catch (error) {
@@ -128,12 +128,12 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             contentLength: content?.length || 0,
             contentPreview: content?.substring(0, 100) + '...'
         });
-        
+
         if (isMounted) {
             console.log('Processing markdown...');
             const html = processMarkdown();
-                console.log('Markdown processing completed, setting processedHtml');
-                setProcessedHtml(html);
+            console.log('Markdown processing completed, setting processedHtml');
+            setProcessedHtml(html);
         } else {
             console.log('Skipping markdown processing - component not mounted');
         }
@@ -148,7 +148,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 console.log('MathJax v4.0.0 with CHTML output is available, processing math expressions...');
                 console.log('MathJax version:', (window as any).MathJax.version);
                 console.log('Container HTML sample:', containerRef.current.innerHTML.substring(0, 500));
-                
+
                 // Check what math delimiters are in the container before processing
                 const containerHTML = containerRef.current.innerHTML;
                 console.log('Math delimiters in container before MathJax:', {
@@ -157,28 +157,28 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                     hasParentheses: containerHTML.includes('\\('),
                     hasBrackets: containerHTML.includes('\\[')
                 });
-                
+
                 // Process the entire container - MathJax v4.0.0 will find and process all math expressions
                 console.log('Calling MathJax.typesetPromise with container for CHTML output...');
-                
+
                 (window as any).MathJax.typesetPromise([containerRef.current]).then(() => {
                     console.log('MathJax v4.0.0 CHTML processing completed successfully');
-                    
+
                     // Check for processed math expressions (v4.0.0 CHTML output)
                     const mathJaxElements = containerRef.current?.querySelectorAll('.MathJax, mjx-container, mjx-math, .mjx-chtml') || [];
                     console.log(`Found ${mathJaxElements.length} MathJax v4.0.0 CHTML processed elements`);
-                    
+
                     // Log some examples of processed math
                     mathJaxElements.forEach((element, index) => {
                         if (index < 3) { // Log first 3 elements
                             console.log(`MathJax v4.0.0 CHTML element ${index + 1}:`, {
-                            tagName: element.tagName,
-                            className: element.className,
-                            innerHTML: element.innerHTML.substring(0, 100) + '...'
-                        });
+                                tagName: element.tagName,
+                                className: element.className,
+                                innerHTML: element.innerHTML.substring(0, 100) + '...'
+                            });
                         }
                     });
-                    
+
                     // Global notification for debug page
                     if ((window as any).onMathJaxProcessingComplete) {
                         (window as any).onMathJaxProcessingComplete(mathJaxElements.length);
@@ -208,7 +208,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             isMounted,
             processedHtmlLength: processedHtml?.length || 0
         });
-        
+
         if (processedHtml && containerRef.current && isMounted) {
             console.log('Starting mermaid and math processing...');
             // Add a small delay to ensure the DOM is fully updated
@@ -220,6 +220,8 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                     console.log('Timer fired, calling processMathExpressions...');
                     processMathExpressions();
                 }, 200);
+
+
             }, 100);
 
             return () => {
