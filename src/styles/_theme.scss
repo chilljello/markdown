@@ -746,8 +746,10 @@ button {
 }
 
 .dark .mermaid {
-  background: rgb(136, 197, 136);
+  background: rgb(53, 88, 53);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+
 }
 
 // Mermaid Wrapper Styles
@@ -792,6 +794,41 @@ button {
   &.hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
+
+
+  svg {
+
+    marker path,
+    .edge line,
+    .edge path[marker-end],
+    .edge path[marker-start],
+    .edge path[marker-mid],
+    .actor line {
+      stroke: white !important;
+      fill: white !important;
+    }
+
+    .edgePaths path {
+      stroke: white !important;
+    }
+
+    .messageText {
+      fill: white !important;
+    }
+
+    line {
+      stroke: white !important;
+    }
+
+    path.messageLine0,
+    path.messageLine1,
+    path.messageLine2,
+    path.messageLine3,
+    path.messageLine4 {
+      stroke: white !important;
+    }
+  }
+
 }
 
 // =============================================================================
