@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { cn } from "../lib/utils";
 import { MarkdownViewer } from "./markdown-viewer";
+import { toast } from "sonner";
 import { 
   Edit3, 
   Eye, 
@@ -57,7 +58,7 @@ export function MarkdownEditor({
         if (typeof text === "string") {
           setContent(text);
           onSave(text);
-          alert(`File "${file.name}" imported successfully!`);
+          toast.success(`File "${file.name}" imported successfully!`);
         }
       };
       reader.readAsText(file);
@@ -75,13 +76,13 @@ export function MarkdownEditor({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    alert("File exported successfully!");
+    toast.success("File exported successfully!");
   }, [content]);
 
   // Handle save
   const handleSave = useCallback(() => {
     onSave(content);
-    alert("Content saved!");
+    toast.success("Content saved!");
   }, [content, onSave]);
 
   // Trigger file input click

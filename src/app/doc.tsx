@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFileManager } from '@/hooks/use-file-manager';
 import { Button } from '@/components/ui/button';
+import { Layout } from '@/components/layout';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ import { MarkdownViewer } from '@/components/markdown-viewer';
 import { MarkdownEditor } from '@/components/markdown-editor';
 import { getCompressionStats } from '@/lib/compression';
 import { getDecompressedContent } from '@/actions/file-actions';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface DocPageProps {
   onNavigate?: (route: 'home' | 'doc') => void;
@@ -281,9 +283,9 @@ export default function DocPage({ onNavigate }: DocPageProps) {
   const compressionStats = currentFile ? getCompressionStats(editorContent) : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <Layout>
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -294,6 +296,7 @@ export default function DocPage({ onNavigate }: DocPageProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => onNavigate?.('home')}>
                 <FileText className="h-4 w-4 mr-2" />
                 Back to Home
@@ -855,6 +858,6 @@ export default function DocPage({ onNavigate }: DocPageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Layout>
   );
 }

@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot index.html",
-    "build": "bun build ./src/index.tsx --outdir ./dist --minify",
-    "build:css": "bun build ./src/styles/main.scss --outdir ./dist --minify",
+    "dev": "./dev.sh",
+    "dev:css": "chokidar \"src/styles/**/*.scss\" -c \"bun run build:css\" --initial",
+    "build": "bun run build:css && bun build ./src/index.tsx --outdir ./dist --minify",
+    "build:css": "cp src/styles/variables.css dist/ && bunx sass src/styles/main.scss dist/styles.css --style=compressed",
     "build:full": "bun run build:css && bun run build",
     "preview": "bun --hot dist/index.html",
     "type-check": "bunx --bun tsc --noEmit",
@@ -87,7 +88,10 @@
     "@types/pako": "2.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "chokidar-cli": "^3.0.0",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
+    "sass-embedded": "^1.92.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

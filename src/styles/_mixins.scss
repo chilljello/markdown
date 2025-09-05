@@ -2,17 +2,18 @@
 // SASS Mixins
 // =============================================================================
 
-@import 'variables';
+@use 'sass:map';
+@use 'variables' as *;
 
 @mixin theme-colors($theme) {
-  @each $name, $value in map-get($colors, $theme) {
+  @each $name, $value in map.get($colors, $theme) {
     --#{$name}: #{$value};
   }
 }
 
 @mixin responsive($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    @media (min-width: map-get($breakpoints, $breakpoint)) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    @media (min-width: map.get($breakpoints, $breakpoint)) {
       @content;
     }
   }
@@ -30,7 +31,7 @@
 }
 
 @mixin card-shadow {
-  box-shadow: map-get($shadows, md);
+  box-shadow: map.get($shadows, md);
   border: 1px solid var(--border);
 }
 

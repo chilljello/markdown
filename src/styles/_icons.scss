@@ -2,8 +2,8 @@
 // Icons and Logos System
 // =============================================================================
 
-@import 'variables';
-@import 'mixins';
+@use 'variables' as *;
+@use 'mixins' as *;
 
 // =============================================================================
 // Icon Base Classes

@@ -323,7 +323,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     }, [processedHtml, renderMermaidDiagrams, isMounted]);
 
     return (
-        <Card className={cn("p-6 overflow-auto", className)}>
+        <Card className={cn("overflow-auto", className)}>
             <div
                 ref={containerRef}
                 className="markdown-body mathpix-markdown"

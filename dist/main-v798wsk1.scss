@@ -2,28 +2,18 @@
 // Main SASS File - Markdown Viewer Styles
 // =============================================================================
 
-// Import partials using @use
-@use 'sass:map';
-@use 'variables' as *;
-@use 'mixins' as *;
-@use 'theme' as *;
-@use 'ui-components' as *;
-@use 'icons' as *;
+// Import partials
+@import 'variables';
+@import 'mixins';
+@import 'theme';
+@import 'ui-components';
+@import 'icons';
 
 // =============================================================================
 // Base Styles
 // =============================================================================
 
 // CSS variables are now defined in _theme.scss to avoid conflicts
-
-// Ensure CSS variables are applied to the root element
-html {
-  color-scheme: light;
-}
-
-html.dark {
-  color-scheme: dark;
-}
 
 // Dark theme is now defined in _theme.scss to avoid conflicts
 

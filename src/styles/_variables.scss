@@ -1,6 +1,7 @@
 // =============================================================================
 // SASS Variables and Configuration
 // =============================================================================
+// Test comment for SASS watching - updated
 
 // Color Palette - Updated to match working Next.js version
 $colors: (
@@ -93,13 +94,13 @@ $border-radius: (
   xl: calc(var(--radius) + 4px)
 );
 
-$radius: 0.5rem;
+$radius: 0.8rem;
 
 // Typography
 $font-families: (
-  sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif,
-  mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace,
-  math: 'Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif
+  sans: (-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif),
+  mono: ('Monaco', 'Menlo', 'Ubuntu Mono', monospace),
+  math: ('Computer Modern', 'Times New Roman', 'STIX Two Math', 'Asana Math', 'XITS Math', 'Cambria Math', 'Libertinus Math', serif)
 );
 
 $font-sizes: (

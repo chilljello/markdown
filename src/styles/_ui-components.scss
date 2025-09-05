@@ -2,9 +2,9 @@
 // Complete UI Components Library
 // =============================================================================
 
-@import 'variables';
-@import 'mixins';
-@import 'theme';
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'theme' as *;
 
 // =============================================================================
 // Button Components

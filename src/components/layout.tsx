@@ -3,8 +3,7 @@
 // =============================================================================
 
 import React, { type ReactNode } from 'react';
-import { ThemeProvider } from './theme-provider';
-import { Toaster } from './ui/sonner';
+import { ThemeToggle } from './theme-toggle';
 
 // =============================================================================
 // Layout Props Interface
@@ -12,118 +11,8 @@ import { Toaster } from './ui/sonner';
 
 export interface LayoutProps {
   children: ReactNode;
-  defaultTheme?: 'light' | 'dark' | 'system';
-  storageKey?: string;
-  showHeader?: boolean;
-  showFooter?: boolean;
   className?: string;
 }
-
-// =============================================================================
-// Header Component
-// =============================================================================
-
-const Header: React.FC = () => {
-  return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 flex">
-          <a className="mr-6 flex items-center space-x-2" href="/">
-            <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-primary-foreground text-sm font-bold">M</span>
-            </div>
-            <span className="hidden font-bold sm:inline-block">
-              Markdown Viewer
-            </span>
-          </a>
-        </div>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <a
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-              href="/docs"
-            >
-              Documentation
-            </a>
-            <a
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-              href="/examples"
-            >
-              Examples
-            </a>
-            <a
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-              href="https://github.com/your-repo"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub
-            </a>
-          </nav>
-        </div>
-      </div>
-    </header>
-  );
-};
-
-// =============================================================================
-// Footer Component
-// =============================================================================
-
-const Footer: React.FC = () => {
-  return (
-    <footer className="border-t bg-background">
-      <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built with{" "}
-            <a
-              href="https://bun.sh"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4"
-            >
-              Bun
-            </a>
-            ,{" "}
-            <a
-              href="https://react.dev"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4"
-            >
-              React
-            </a>
-            , and{" "}
-            <a
-              href="https://www.typescriptlang.org"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4"
-            >
-              TypeScript
-            </a>
-            . The source code is available on{" "}
-            <a
-              href="https://github.com/your-repo"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4"
-            >
-              GitHub
-            </a>
-            .
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © 2024 Markdown Viewer. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </footer>
-  );
-};
 
 // =============================================================================
 // Main Layout Component
@@ -131,40 +20,15 @@ const Footer: React.FC = () => {
 
 export const Layout: React.FC<LayoutProps> = ({
   children,
-  defaultTheme = 'system',
-  storageKey = 'ui-theme',
-  showHeader = true,
-  showFooter = true,
   className = ''
 }) => {
   return (
-    <ThemeProvider defaultTheme={defaultTheme} storageKey={storageKey}>
-      <div className={`min-h-screen bg-background font-sans antialiased ${className}`}>
-        {/* Header */}
-        {showHeader && <Header />}
-        
-        {/* Main Content */}
-        <main className="flex-1">
-          {children}
-        </main>
-        
-        {/* Footer */}
-        {showFooter && <Footer />}
-        
-        {/* Toaster for notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'var(--background)',
-              color: 'var(--foreground)',
-              border: '1px solid var(--border)',
-            },
-          }}
-        />
-      </div>
-    </ThemeProvider>
+    <div className={`min-h-screen bg-background font-sans antialiased ${className}`}>
+      {/* Main Content */}
+      <main className="flex-1">
+        {children}
+      </main>
+    </div>
   );
 };
 

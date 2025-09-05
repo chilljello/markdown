@@ -5,6 +5,7 @@ import { MarkdownEditor } from "../components/markdown-editor";
 import { MarkdownViewer } from "../components/markdown-viewer";
 import { DragDropZone } from "../components/drag-drop-zone";
 import { Button } from "../components/ui/button";
+import { toast } from "sonner";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -21,6 +22,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { ThemeToggle } from "../components/theme-toggle";
+import { Layout } from "../components/layout";
 import {
   getShareableUrl,
   getCompressionStats,
@@ -187,7 +190,9 @@ function HomeContent({
         onViewModeChange("fullscreen");
         onActiveTabChange("preview");
         // Show success notification
-        alert(`File "${file.name}" loaded successfully! Switched to fullscreen preview mode.`);
+        toast.success(`File "${file.name}" loaded successfully!`, {
+          description: "Switched to fullscreen preview mode."
+        });
       }
     };
     reader.readAsText(file);
@@ -282,16 +287,18 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         // Store the last shared URL for display
         setLastSharedUrl(shareableUrl);
 
-        // Show success alert with compression info
+        // Show success toast with compression info
         if (stats.shouldCompress) {
-          alert(`URL copied! Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`);
+          toast.success("URL copied!", {
+            description: `Content compressed: ${stats.originalSize} → ${stats.compressedSize} chars (${stats.compressionRatio.toFixed(1)}% reduction)`
+          });
         } else {
-          alert("URL copied to clipboard!");
+          toast.success("URL copied to clipboard!");
         }
       })
       .catch((err) => {
         console.error("Failed to copy URL:", err);
-        alert("Failed to copy URL to clipboard");
+        toast.error("Failed to copy URL to clipboard");
       })
       .finally(() => {
         setIsSharing(false);
@@ -412,21 +419,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   }, [handleCopy, activeTab]);
 
   return (
-    <main
-      className={cn(
-        "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
-        viewMode === "fullscreen" &&
-          activeTab === "preview" &&
-          "bg-gradient-to-br from-background to-muted/20",
-      )}
-    >
+    <Layout className={cn(
+      "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
+      viewMode === "fullscreen" &&
+        activeTab === "preview" &&
+        "bg-gradient-to-br from-background to-muted/20",
+    )}>
       <header
         className={cn(
           "border-b sticky top-0 z-50 bg-background transition-all duration-300 ease-in-out",
           isDragOver && "bg-primary/5 border-primary/50",
           viewMode === "fullscreen" &&
             activeTab === "preview" &&
-            "bg-background/95 backdrop-blur-sm border-primary/20",
+            "bg-background border-primary/20",
         )}
       >
         <div className="mx-auto container flex h-16 items-center px-4">
@@ -450,6 +455,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </div>
 
           <div className="ml-auto flex gap-2">
+            <ThemeToggle />
             {isDragOver && (
               <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium">
                 <FileText className="h-4 w-4" />
@@ -560,7 +566,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(lastSharedUrl);
-                  alert("URL copied to clipboard!");
+                  toast.success("URL copied to clipboard!");
                 }}
                 className="h-6 px-2 py-1 text-green-600 hover:text-green-800 text-xs"
                 title="Copy URL to clipboard"
@@ -634,7 +640,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 onClick={() => {
                   if (lastSharedUrl) {
                     navigator.clipboard.writeText(lastSharedUrl);
-                    alert("URL copied to clipboard!");
+                    toast.success("URL copied to clipboard!");
                   }
                 }}
                 className="flex-1"
@@ -663,6 +669,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </Layout>
   );
 }
