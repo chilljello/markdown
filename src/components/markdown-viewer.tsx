@@ -4,11 +4,11 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
 import { cn } from "../lib/utils";
 import mermaid from "mermaid";
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import { usePanZoom } from '../hooks/use-pan-zoom';
 import { useMermaid } from '../hooks/use-mermaid';
-
-
+import hljs from 'highlight.js';
+import { markedHighlight } from "marked-highlight";
 // Initialize mermaid with better error handling
 mermaid.initialize({
     startOnLoad: false,
@@ -17,13 +17,29 @@ mermaid.initialize({
     logLevel: 'error'
 });
 
+const marked = new Marked(
+  markedHighlight({
+	emptyLangClass: 'hljs',
+    langPrefix: 'hljs language-',
+    highlight(code, lang, info) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    }
+  })
+);
 // Create a custom renderer to preserve math delimiters
 const renderer = new marked.Renderer();
 
 // Override the text renderer to preserve math delimiters
 renderer.text = function (text) {
     // Don't escape backslashes in math delimiters
-    return String(text.raw || text);
+    //return String(text.raw || text);
+    // Match inline LaTeX math expressions (e.g., \(...\))
+    const latexRegex = /\\\([^\\]*\\\)/g;
+    if (latexRegex.test(text.raw)) {
+        return String(text.raw); // Return unescaped LaTeX expressions
+    }
+    return String(text.text); // Default behavior for other text
 };
 
 // Configure marked with custom renderer
@@ -143,31 +159,13 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     const processMathExpressions = useCallback(() => {
         try {
             console.log('=== MATHJAX v4.0.0 CHTML PROCESSING DEBUG ===');
-            console.log('processMathExpressions called');
             if (containerRef.current && (window as any).MathJax) {
-                console.log('MathJax v4.0.0 with CHTML output is available, processing math expressions...');
-                console.log('MathJax version:', (window as any).MathJax.version);
-                console.log('Container HTML sample:', containerRef.current.innerHTML.substring(0, 500));
-
-                // Check what math delimiters are in the container before processing
-                const containerHTML = containerRef.current.innerHTML;
-                console.log('Math delimiters in container before MathJax:', {
-                    hasDollarInline: containerHTML.includes('$') && !containerHTML.includes('$$'),
-                    hasDollarDisplay: containerHTML.includes('$$'),
-                    hasParentheses: containerHTML.includes('\\('),
-                    hasBrackets: containerHTML.includes('\\[')
-                });
-
                 // Process the entire container - MathJax v4.0.0 will find and process all math expressions
-                console.log('Calling MathJax.typesetPromise with container for CHTML output...');
-
                 (window as any).MathJax.typesetPromise([containerRef.current]).then(() => {
                     console.log('MathJax v4.0.0 CHTML processing completed successfully');
-
                     // Check for processed math expressions (v4.0.0 CHTML output)
                     const mathJaxElements = containerRef.current?.querySelectorAll('.MathJax, mjx-container, mjx-math, .mjx-chtml') || [];
                     console.log(`Found ${mathJaxElements.length} MathJax v4.0.0 CHTML processed elements`);
-
                     // Log some examples of processed math
                     mathJaxElements.forEach((element, index) => {
                         if (index < 3) { // Log first 3 elements
@@ -178,7 +176,6 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                             });
                         }
                     });
-
                     // Global notification for debug page
                     if ((window as any).onMathJaxProcessingComplete) {
                         (window as any).onMathJaxProcessingComplete(mathJaxElements.length);

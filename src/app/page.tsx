@@ -6,6 +6,7 @@ import { MarkdownViewer } from "../components/markdown-viewer";
 import { DragDropZone } from "../components/drag-drop-zone";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
+import { useFileManager } from "../hooks/use-file-manager";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -44,28 +45,22 @@ import {
 // Sample markdown with Mermaid diagram for demonstration
 const SAMPLE_MARKDOWN = `# Markdown Mermaid Viewer
 
-
-
 Welcome to the Markdown Mermaid Viewer! This tool allows you to:
 
+### System Components
+- **Consensus Layer**: Validates and orders transactions in the DAG via proof-of-stake or similar, ensuring acyclic integrity.
+- **CLOB**: Off-chain or in-memory order book for matching buy/sell orders; outputs matched trades to the risk engine.
+- **Risk Engine**: Processes post-match data:
+  - Update user positions and compute PNL (e.g., \( \text{PNL} = (\text{current_price} - \text{entry_price}) \times \text{position_size} \)).
+  - Check liquidation thresholds (e.g., if margin ratio < 1.1, trigger liquidation).
+  - Portfolio management: Aggregate assets, risks, and bucket IDs (e.g., low/medium/high risk buckets).
+  - Bucket ID: A categorization (e.g., hash-based or exposure-based ID) for grouping similar risk profiles.
+- **DAG Network**: Transactions as vertices, dependencies as edges. Shards form sub-DAGs with cross-shard links.
+- **Nodes**: Heterogeneous with sizes \\( s_i \\) (normalized, \\( \sum s_i = 1 \\)), representing capacity.
 
-
-Below is the GitHub Markdown rendering of the provided whitepaper on Polynomial Perpetual Contracts (PPCs). The document has been formatted to adhere to GitHub's Markdown syntax, including LaTeX for equations, IEEE-style references, and a clear structure. The corrected short-side PnL has been integrated as specified. You can copy this into a README.md or paper.md file in a GitHub repository for proper rendering with MathJax support.
-Polynomial Perpetual Contracts: A Dynamic, Volatility-Adaptive Framework with Real-Time Convexity-Adjusted Funding
-Author(s): [Your Name]
-Affiliation: [Your Affiliation or Independent Researcher]
-Email: [Your Email]  
-Abstract
-Polynomial Perpetual Contracts (PPCs) extend perpetual futures with non-linear payoffs of the form 
-a \cdot S^n
- (long) and 
-b \cdot T^{-m}
- (short), enabling customizable risk profiles in volatile cryptocurrency markets. Non-linear payoffs introduce positive convexity for 
-n, m > 1
-, favoring longs, and concavity for 
-n, m < 1
-,
-
+\`\`\`javascript
+const highlight = "code";
+\`\`\`
 
 - Write and edit Markdown content
 - Render Mermaid diagrams inside your Markdown
@@ -144,6 +139,7 @@ function HomeContent({
   onActiveTabChange,
   contentToLoad,
   onContentLoaded,
+  createFile,
 }: {
   viewMode: "split" | "fullscreen";
   onCopy: (content: string) => void;
@@ -152,6 +148,7 @@ function HomeContent({
   onActiveTabChange: (tab: "edit" | "preview") => void;
   contentToLoad?: string | null;
   onContentLoaded?: () => void;
+  createFile: (name: string, content: string, tags?: string[]) => Promise<any>;
 }) {
   const contentParam = getSearchParam("content");
 
@@ -208,11 +205,20 @@ function HomeContent({
   }, [contentToLoad, onViewModeChange, onActiveTabChange, onContentLoaded]);
 
 
-  // Pass the current markdown content to the copy function
-  const handleSave = (content: string) => {
+  // Pass the current markdown content to the copy function and create a new file
+  const handleSave = async (content: string) => {
     setMarkdown(content);
     // Update the copy function's access to current content
     onCopy(content);
+    
+    // Create a new file with the title "new-doc" using the same functionality as handleCreateFile
+    try {
+      await createFile("new-doc", content);
+      toast.success('File "new-doc" created successfully');
+    } catch (error) {
+      console.error('Failed to create file:', error);
+      toast.error('Failed to create file');
+    }
   };
 
   // Handle file drop from drag and drop
@@ -293,6 +299,12 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
   const [isSharing, setIsSharing] = useState(false);
   const [lastSharedUrl, setLastSharedUrl] = useState<string | null>(null);
   const [showUrlDialog, setShowUrlDialog] = useState(false);
+
+  // File manager hook for creating files
+  const { createFile } = useFileManager({
+    autoSave: false,
+    maxFiles: 100
+  });
 
   const handleCopy = useCallback(async () => {
     try {
@@ -582,7 +594,7 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
 
       {/* Last Shared URL Display */}
       {lastSharedUrl && (
-        <div className="bg-green-50 border-b border-green-200 px-4 py-2">
+        <div className="bg-green-50 border-b border-green-200 px-4 py-2 max-h-100">
           <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-green-800">
               <Share2 className="h-4 w-4" />
@@ -591,7 +603,7 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
             <div className="flex items-center gap-2">
               <div className="max-w-md">
                 <code
-                  className="text-xs bg-green-100 px-2 py-1 rounded text-green-700 block truncate"
+                  className=" text-xs bg-green-100 px-2 py-1 rounded text-green-700 block truncate"
                   title={lastSharedUrl}
                 >
                   {lastSharedUrl}
@@ -647,6 +659,7 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
           onActiveTabChange={setActiveTab}
           contentToLoad={contentToLoad}
           onContentLoaded={onContentLoaded}
+          createFile={createFile}
         />
       </Suspense>
 
@@ -660,7 +673,7 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
 
       {/* URL Dialog */}
       <Dialog open={showUrlDialog} onOpenChange={setShowUrlDialog}>
-        <DialogContent className="max-w-4xl max-h-96">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Shared URL</DialogTitle>
           </DialogHeader>
@@ -668,8 +681,8 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
             <label className="text-sm font-medium text-muted-foreground">
               URL to share:
             </label>
-            <div className="mt-2 p-3 bg-muted rounded-md">
-              <code className="text-sm break-all">{lastSharedUrl}</code>
+            <div className="max-h-96 mt-2 p-3 overflow-y-auto bg-muted rounded-md">
+              <code className=" text-sm break-all">{lastSharedUrl}</code>
             </div>
           </div>
           <DialogFooter>

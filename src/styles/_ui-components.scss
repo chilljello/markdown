@@ -158,8 +158,8 @@
   
   &:focus {
     outline: none;
-    border-color: var(--ring);
-    box-shadow: 0 0 0 2px var(--ring);
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
   }
   
   &:disabled {
@@ -169,6 +169,17 @@
   
   &::placeholder {
     color: var(--muted-foreground);
+  }
+  
+  // Enhanced selection styling
+  &::selection {
+    background-color: #ff6b6b;
+    color: #ffffff;
+  }
+  
+  &::-moz-selection {
+    background-color: #ff6b6b;
+    color: #ffffff;
   }
 }
 

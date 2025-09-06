@@ -286,30 +286,6 @@ em {
   font-style: italic;
 }
 
-code {
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-  background-color: var(--muted);
-  padding: 0.125rem 0.25rem;
-  border-radius: var(--radius-sm);
-  color: var(--foreground);
-}
-
-pre {
-  font-family: var(--font-mono);
-  background-color: var(--muted);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  border: 1px solid var(--border);
-
-  code {
-    background-color: transparent;
-    padding: 0;
-    border-radius: 0;
-  }
-}
-
 blockquote {
   margin: var(--spacing-lg) 0;
   padding: var(--spacing-md) var(--spacing-lg);
@@ -375,13 +351,38 @@ button {
 // =============================================================================
 
 ::selection {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
+  background-color: #ff6b6b;
+  color: #ffffff;
 }
 
 ::-moz-selection {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
+  background-color: #ff6b6b;
+  color: #ffffff;
+}
+
+// Additional highlight colors for better visibility
+.highlight-visible {
+  background-color: #ff6b6b !important;
+  color: #ffffff !important;
+}
+
+// Textarea specific selection styling
+textarea::selection {
+  background-color: #ff6b6b;
+  color: #ffffff;
+}
+
+textarea::-moz-selection {
+  background-color: #ff6b6b;
+  color: #ffffff;
+}
+
+// Focus highlight for better visibility
+textarea:focus {
+  outline: 2px solid #ff6b6b;
+  outline-offset: 2px;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
 }
 
 // =============================================================================
@@ -613,22 +614,17 @@ button {
   code {
     font-family: var(--font-mono);
     font-size: 0.875em;
-    background-color: var(--muted);
     padding: 0.125rem 0.25rem;
-    border-radius: var(--radius-sm);
     color: var(--foreground);
   }
 
   pre {
     font-family: var(--font-mono);
-    background-color: var(--muted);
     padding: var(--spacing-lg);
-    border-radius: var(--radius-md);
     overflow-x: auto;
     border: 1px solid var(--border);
-
+    background-color: rgb(142, 142, 142);
     code {
-      background-color: transparent;
       padding: 0;
       border-radius: 0;
     }
@@ -721,7 +717,37 @@ button {
   }
 }
 
+.dark .markdown-body {
+  color: var(--foreground);
+  background-color: var(--background);
 
+  blockquote {
+    background-color: var(--muted);
+    border-left-color: var(--primary);
+    color: var(--muted-foreground);
+  }
+
+  pre {
+    background-color: rgb(30, 30, 30);
+    border-color: var(--border);
+  }
+
+  table th {
+    background-color: var(--muted);
+  }
+
+  table tr:nth-child(even) {
+    background-color: var(--muted);
+  }
+
+  .success,
+  [data-success],
+  .alert-success {
+    color: var(--success-foreground);
+    background-color: var(--success);
+    border-color: var(--success);
+  }
+}
 
 // =============================================================================
 // Component Styles
