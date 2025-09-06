@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
 import { cn } from "../lib/utils";
 import mermaid from "mermaid";
-import { Marked } from 'marked';
+import { Marked, Renderer } from 'marked';
 import { usePanZoom } from '../hooks/use-pan-zoom';
 import { useMermaid } from '../hooks/use-mermaid';
 import hljs from 'highlight.js';
@@ -17,37 +17,71 @@ mermaid.initialize({
     logLevel: 'error'
 });
 
+// Configure marked with highlight extension
 const marked = new Marked(
   markedHighlight({
 	emptyLangClass: 'hljs',
     langPrefix: 'hljs language-',
     highlight(code, lang, info) {
+      // Skip highlighting for mermaid diagrams - they'll be handled by our custom renderer
+      if (lang === 'mermaid') {
+        return code;
+      }
       const language = hljs.getLanguage(lang) ? lang : 'plaintext';
       return hljs.highlight(code, { language }).value;
     }
   })
 );
-// Create a custom renderer to preserve math delimiters
-const renderer = new marked.Renderer();
 
-// Override the text renderer to preserve math delimiters
-renderer.text = function (text) {
-    // Don't escape backslashes in math delimiters
-    //return String(text.raw || text);
-    // Match inline LaTeX math expressions (e.g., \(...\))
-    const latexRegex = /\\\([^\\]*\\\)/g;
-    if (latexRegex.test(text.raw)) {
-        return String(text.raw); // Return unescaped LaTeX expressions
-    }
-    return String(text.text); // Default behavior for other text
+// Create a function to create the custom renderer with access to sanitizeMermaidCode
+const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): any => {
+    // Create a new renderer instance to get default behavior
+    const renderer = new Renderer();
+    
+    // Override only the methods we need to customize
+    renderer.text = function(text: any) {
+        // Match inline LaTeX math expressions (e.g., \(...\))
+        const latexRegex = /\\\([^\\]*\\\)/g;
+        if (text.raw && latexRegex.test(text.raw)) {
+            return String(text.raw); // Return unescaped LaTeX expressions
+        }
+        return String(text.text || text); // Default behavior for other text
+    };
+    
+    // Enhanced strong/bold text renderer for filename-description format
+    renderer.strong = function(text: any) {
+        const textContent = String(text.text || text);
+        
+        // Pattern to match filename-description format: filename.md (Description)
+        const filenameDescriptionRegex = /^([^()]+\.(md|txt|js|ts|py|java|cpp|c|h|css|html|json|xml|yaml|yml|sql|sh|bat|ps1))\s*\(([^)]+)\)$/;
+        const match = textContent.match(filenameDescriptionRegex);
+        
+        if (match) {
+            const [, filename, extension, description] = match;
+            return `<strong class="filename-description">
+                <span class="filename">${filename}</span>
+                <span class="description">(${description})</span>
+            </strong>`;
+        }
+        
+        // Default strong rendering for other cases
+        return `<strong>${textContent}</strong>`;
+    };
+    
+    renderer.code = function(code: any) {
+        if (code.lang === 'mermaid') {
+            const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+            const codeString = typeof code === 'string' ? code : code.text || String(code);
+            const sanitizedCode = sanitizeMermaidCode(codeString);
+            return `<div class="mermaid" id="${id}">${sanitizedCode}</div>`;
+        }
+        
+        // Use default code rendering for other languages
+        return this.constructor.prototype.code.call(this, code);
+    };
+    
+    return renderer;
 };
-
-// Configure marked with custom renderer
-marked.setOptions({
-    breaks: false,
-    gfm: true,
-    renderer: renderer
-});
 
 interface MarkdownViewerProps {
     content: string;
@@ -58,56 +92,6 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [processedHtml, setProcessedHtml] = React.useState<string>("");
     const [isMounted, setIsMounted] = React.useState(false);
-
-
-    // Function to process markdown with marked and custom mermaid handling
-    const processMarkdown = useCallback(() => {
-        try {
-            if (!content.trim()) {
-                return "";
-            }
-
-            console.log('=== MARKED PROCESSING DEBUG ===');
-            console.log('Original content sample:', content.substring(0, 200));
-            console.log('Contains math delimiters:', {
-                hasDollarInline: content.includes('$') && !content.includes('$$'),
-                hasDollarDisplay: content.includes('$$'),
-                hasParentheses: content.includes('\\('),
-                hasBrackets: content.includes('\\[')
-            });
-
-            // Replace mermaid code blocks with special divs
-            const processedContent = content.replace(
-                /```mermaid\n([\s\S]*?)```/g,
-                (_, code) => {
-                    const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
-                    const sanitizedCode = sanitizeMermaidCode(code);
-                    return `<div class="mermaid" id="${id}">${sanitizedCode}</div>`;
-                }
-            );
-
-            // Render the markdown content using marked with custom renderer
-            console.log('Processing content with marked (custom renderer):', processedContent.substring(0, 200) + '...');
-
-            let renderedHtml = marked.parse(processedContent) as string;
-            console.log('Marked render completed, HTML length:', renderedHtml.length);
-            console.log('Rendered HTML sample:', renderedHtml.substring(0, 500) + '...');
-
-            // Check what happened to math delimiters after marked processing
-            console.log('Math delimiters after marked:', {
-                hasDollarInline: renderedHtml.includes('$') && !renderedHtml.includes('$$'),
-                hasDollarDisplay: renderedHtml.includes('$$'),
-                hasParentheses: renderedHtml.includes('\\('),
-                hasBrackets: renderedHtml.includes('\\[')
-            });
-
-            console.log('Final HTML sample:', renderedHtml.substring(0, 500) + '...');
-            return renderedHtml;
-        } catch (error) {
-            console.error("Error processing markdown:", error);
-            return `<div class="error">Error processing markdown content: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
-        }
-    }, [content]);
 
     // Use the pan and zoom hook
     const { addPanZoomToChart } = usePanZoom({
@@ -125,7 +109,50 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         enableLogging: true
     });
 
+    // Create custom renderer with access to sanitizeMermaidCode
+    const customRenderer = React.useMemo(() => createCustomRenderer(sanitizeMermaidCode), [sanitizeMermaidCode]);
 
+    // Function to process markdown with marked and custom mermaid handling
+    const processMarkdown = useCallback(() => {
+        try {
+            if (!content.trim()) {
+                return "";
+            }
+
+            console.log('=== MARKED PROCESSING DEBUG ===');
+            console.log('Original content sample:', content.substring(0, 200));
+            console.log('Contains math delimiters:', {
+                hasDollarInline: content.includes('$') && !content.includes('$$'),
+                hasDollarDisplay: content.includes('$$'),
+                hasParentheses: content.includes('\\('),
+                hasBrackets: content.includes('\\[')
+            });
+
+            // Apply custom renderer with mermaid handling
+            marked.use({ renderer: customRenderer });
+
+            // Render the markdown content using marked with custom renderer
+            console.log('Processing content with marked (custom renderer):', content.substring(0, 200) + '...');
+
+            let renderedHtml = marked.parse(content) as string;
+            console.log('Marked render completed, HTML length:', renderedHtml.length);
+            console.log('Rendered HTML sample:', renderedHtml.substring(0, 500) + '...');
+
+            // Check what happened to math delimiters after marked processing
+            console.log('Math delimiters after marked:', {
+                hasDollarInline: renderedHtml.includes('$') && !renderedHtml.includes('$$'),
+                hasDollarDisplay: renderedHtml.includes('$$'),
+                hasParentheses: renderedHtml.includes('\\('),
+                hasBrackets: renderedHtml.includes('\\[')
+            });
+
+            console.log('Final HTML sample:', renderedHtml.substring(0, 500) + '...');
+            return renderedHtml;
+        } catch (error) {
+            console.error("Error processing markdown:", error);
+            return `<div class="error">Error processing markdown content: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
+        }
+    }, [content, customRenderer]);
 
     // Set mounted state when component mounts
     useEffect(() => {

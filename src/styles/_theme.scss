@@ -696,6 +696,38 @@ textarea:focus {
     font-weight: 600;
   }
 
+  // Enhanced filename-description format styling
+  strong.filename-description {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    background: var(--muted);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    
+    .filename {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    
+    .description {
+      color: var(--muted-foreground);
+      font-weight: 500;
+      font-style: italic;
+    }
+    
+    // Add a subtle icon or indicator
+    &::before {
+      content: "📄";
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+    }
+  }
+
   em,
   i {
     font-style: italic;
@@ -1142,6 +1174,20 @@ textarea:focus {
   strong {
     font-weight: 700;
     color: var(--foreground);
+  }
+
+  // Dark theme filename-description styling
+  strong.filename-description {
+    background: var(--muted);
+    border-color: var(--border);
+    
+    .filename {
+      color: var(--primary);
+    }
+    
+    .description {
+      color: var(--muted-foreground);
+    }
   }
 
   em {

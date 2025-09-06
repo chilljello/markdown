@@ -2,7 +2,38 @@ import React, { useEffect, useState } from 'react';
 import { MarkdownViewer } from '../components/markdown-viewer';
 
 // Test markdown content with various math expressions
-const testContent = `# Math Rendering Debug Test
+const testContent = `
+# Test Header
+
+**Bold text** and *italic text*.
+
+[Link text](https://example.com)
+
+\`inline code\`
+
+\`\`\`javascript
+console.log("Hello, world!");
+\`\`\`
+
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+\`\`\`
+
+## Math Test
+
+This paragraph has both **bold text** and inline math: $f(x) = x^2$.
+
+- List item with math: $\\sqrt{2} \\approx 1.414$
+- Another item: $\\pi \\approx 3.14159$
+
+Display math:
+
+$$E = mc^2$$
+
+# Math Rendering Debug Test
 
 This page tests the math rendering using the actual MarkdownViewer component.
 
@@ -340,7 +371,7 @@ export default function DebugPage() {
                         <h2 className="text-xl font-semibold text-gray-800">
                             MarkdownViewer Component Output
                         </h2>
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-white shadow-sm border">
                             <MarkdownViewer 
                                 content={testContent} 
                                 className="p-6 max-h-96 overflow-auto"
