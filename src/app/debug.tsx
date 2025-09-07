@@ -1,26 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { MarkdownViewer } from '../components/markdown-viewer';
 
-// Test markdown content with various math expressions
+// Extend Window interface for MathJax
+declare global {
+    interface Window {
+        MathJax?: any;
+        onMathJaxProcessingComplete?: (count: number) => void;
+        testMathJaxProcessing?: () => void;
+        analyzeMathElements?: () => void;
+        testSpecificMath?: (type: string) => void;
+        analyzePatterns?: () => void;
+    }
+}
+
+// Test markdown content with various patterns and math expressions
 const testContent = `
-# Test Header
+# Regex Pattern Debug Test
 
-**Bold text** and *italic text*.
+This document tests what text content the strong renderer receives with the exact examples from your situation.
 
-[Link text](https://example.com)
+## Your Original Examples
 
-\`inline code\`
+- **algorithm.md (Rotation)**: VRF bounds bias <0.1% for fair delegation/weights, O(1) per epoch ~10min.
+- **02_dag_extension.md (Tips)**: VRF for optimal prev tips, O(log n) selection <5ms.
+- **02.1 (Reshard)**: VRF for new shard in backlog, O(1) <1ms.
+- **04 (Aggregation)**: VRF for subset, combined with VDF for manipulation <1%, O(n log n) <5ms n=1000.
+- **Justification for Multi-Points**: Steps independent (different seeds/inputs), but validation uniform—centralize in crypto pkg for SOLID (single resp), avoiding duplication >0.1%. Bound: 3 points ok if shared, else >5% maint risk.
 
-\`\`\`javascript
-console.log("Hello, world!");
-\`\`\`
+## Additional Test Cases
 
-\`\`\`mermaid
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Action 1]
-    B -->|No| D[Action 2]
-\`\`\`
+- **MY_CONTENT1**:
+- **v1.2.3**:
+- **#123**:
+- **TODO**:
+- **myFunction()**:
+
+## Regular Text (Same Examples)
+
+**algorithm.md (Rotation)**: VRF bounds bias <0.1% for fair delegation/weights, O(1) per epoch ~10min.
+**02_dag_extension.md (Tips)**: VRF for optimal prev tips, O(log n) selection <5ms.
+**02.1 (Reshard)**: VRF for new shard in backlog, O(1) <1ms.
+**04 (Aggregation)**: VRF for subset, combined with VDF for manipulation <1%, O(n log n) <5ms n=1000.
+**Justification for Multi-Points**: Steps independent (different seeds/inputs), but validation uniform—centralize in crypto pkg for SOLID (single resp), avoiding duplication >0.1%. Bound: 3 points ok if shared, else >5% maint risk.
 
 ## Math Test
 
@@ -209,12 +230,40 @@ export default function DebugPage() {
             info += '</div>';
         }
         
-        info += '<h3 class="text-lg font-semibold mb-2 mt-4">Test Results by Section:</h3>';
+        info += '<h3 class="text-lg font-semibold mb-2 mt-4">Pattern Test Results:</h3>';
+        info += '<div class="space-y-1 text-sm">';
+        
+        // Check for special pattern styling
+        const filenameDesc = document.querySelectorAll('.filename-description').length;
+        const underscoreContent = document.querySelectorAll('.underscore-content').length;
+        const versionNumber = document.querySelectorAll('.version-number').length;
+        const issueReference = document.querySelectorAll('.issue-reference').length;
+        const statusIndicator = document.querySelectorAll('.status-indicator').length;
+        const codeReference = document.querySelectorAll('.code-reference').length;
+        const numberedSection = document.querySelectorAll('.numbered-section').length;
+        const spaceSeparated = document.querySelectorAll('.space-separated').length;
+        
+        info += '<p>• Filename-description patterns: ' + filenameDesc + ' found</p>';
+        info += '<p>• Underscore content patterns: ' + underscoreContent + ' found</p>';
+        info += '<p>• Numbered section patterns: ' + numberedSection + ' found</p>';
+        info += '<p>• Space-separated patterns: ' + spaceSeparated + ' found</p>';
+        info += '<p>• Version number patterns: ' + versionNumber + ' found</p>';
+        info += '<p>• Issue reference patterns: ' + issueReference + ' found</p>';
+        info += '<p>• Status indicator patterns: ' + statusIndicator + ' found</p>';
+        info += '<p>• Code reference patterns: ' + codeReference + ' found</p>';
+        info += '</div>';
+        
+        info += '<h3 class="text-lg font-semibold mb-2 mt-4">Math Test Results by Section:</h3>';
         info += '<div class="space-y-1 text-sm">';
         info += '<p>• Test 1 (Dollar inline): ' + (document.querySelector('.math-inline')?.innerHTML.includes('$E = mc^2$') ? '✅' : '❌') + '</p>';
         info += '<p>• Test 2 (Dollar display): ' + (document.querySelector('.math-display')?.innerHTML.includes('$$E = mc^2$$') ? '✅' : '❌') + '</p>';
         info += '<p>• Test 3 (Parentheses inline): ' + (document.querySelector('.math-inline')?.innerHTML.includes('\\(\\frac{dP}{dt}') ? '✅' : '❌') + '</p>';
         info += '<p>• Test 4 (Brackets display): ' + (document.querySelector('.math-display')?.innerHTML.includes('\\[\\int') ? '✅' : '❌') + '</p>';
+        info += '</div>';
+        
+        info += '<h3 class="text-lg font-semibold mb-2 mt-4">Pattern Analysis Tests:</h3>';
+        info += '<div class="space-y-2">';
+        info += '<button onclick="analyzePatterns()" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm mr-2">Analyze Patterns</button>';
         info += '</div>';
         
         info += '<h3 class="text-lg font-semibold mb-2 mt-4">MathJax Processing Tests:</h3>';
@@ -352,6 +401,42 @@ export default function DebugPage() {
                 console.log(`${mathType} element ${index + 1}:`, content);
             });
         };
+
+        (window as any).analyzePatterns = () => {
+            console.log('=== PATTERN ANALYSIS ===');
+            
+            // Check all strong elements
+            const allStrong = document.querySelectorAll('strong');
+            console.log('Total strong elements found:', allStrong.length);
+            
+            allStrong.forEach((element, index) => {
+                const content = element.textContent || element.innerText;
+                const className = element.className;
+                const hasSpecialClass = className.includes('filename-description') || 
+                                      className.includes('underscore-content') || 
+                                      className.includes('numbered-section') || 
+                                      className.includes('space-separated') || 
+                                      className.includes('version-number') || 
+                                      className.includes('issue-reference') || 
+                                      className.includes('status-indicator') || 
+                                      className.includes('code-reference');
+                
+                console.log(`\nStrong element ${index + 1}:`);
+                console.log('  Content:', content);
+                console.log('  Class:', className);
+                console.log('  Has special styling:', hasSpecialClass);
+                
+                if (!hasSpecialClass) {
+                    console.log('  ❌ ISSUE: This element should have special styling but doesn\'t');
+                    console.log('  🔍 Possible causes:');
+                    console.log('    - Pattern regex not matching');
+                    console.log('    - Text content not what expected');
+                    console.log('    - CSS classes not applied');
+                }
+            });
+            
+            console.log('=== END PATTERN ANALYSIS ===');
+        };
     }, []);
 
     return (
@@ -459,6 +544,7 @@ export default function DebugPage() {
                         Use these commands in the browser console for detailed debugging:
                     </p>
                     <div className="bg-yellow-100 p-3 rounded text-sm font-mono space-y-1">
+                        <div><strong>analyzePatterns()</strong> - Analyze all bold text patterns and styling</div>
                         <div><strong>analyzeMathElements()</strong> - Detailed analysis of all math elements</div>
                         <div><strong>testMathJaxProcessing()</strong> - Test MathJax processing on all elements</div>
                         <div><strong>testSpecificMath('dollar-inline')</strong> - Test dollar sign inline math</div>

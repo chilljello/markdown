@@ -17,29 +17,32 @@ mermaid.initialize({
     logLevel: 'error'
 });
 
-// Configure marked with highlight extension
-const marked = new Marked(
-  markedHighlight({
-	emptyLangClass: 'hljs',
-    langPrefix: 'hljs language-',
-    highlight(code, lang, info) {
-      // Skip highlighting for mermaid diagrams - they'll be handled by our custom renderer
-      if (lang === 'mermaid') {
-        return code;
+// Create a function to create marked instance with custom renderer
+const createMarkedInstance = (customRenderer: any) => {
+  return new Marked(
+    markedHighlight({
+      emptyLangClass: 'hljs',
+      langPrefix: 'hljs language-',
+      highlight(code, lang, info) {
+        // Skip highlighting for mermaid diagrams - they'll be handled by our custom renderer
+        if (lang === 'mermaid') {
+          return code;
+        }
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
       }
-      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-      return hljs.highlight(code, { language }).value;
-    }
-  })
-);
+    }),
+    { renderer: customRenderer }
+  );
+};
 
 // Create a function to create the custom renderer with access to sanitizeMermaidCode
 const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): any => {
     // Create a new renderer instance to get default behavior
     const renderer = new Renderer();
-    
+
     // Override only the methods we need to customize
-    renderer.text = function(text: any) {
+    renderer.text = function (text: any) {
         // Match inline LaTeX math expressions (e.g., \(...\))
         const latexRegex = /\\\([^\\]*\\\)/g;
         if (text.raw && latexRegex.test(text.raw)) {
@@ -47,39 +50,95 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
         }
         return String(text.text || text); // Default behavior for other text
     };
-    
+
     // Enhanced strong/bold text renderer for filename-description format
-    renderer.strong = function(text: any) {
+    renderer.strong = function (text: any) {
         const textContent = String(text.text || text);
         
-        // Pattern to match filename-description format: filename.md (Description)
-        const filenameDescriptionRegex = /^([^()]+\.(md|txt|js|ts|py|java|cpp|c|h|css|html|json|xml|yaml|yml|sql|sh|bat|ps1))\s*\(([^)]+)\)$/;
-        const match = textContent.match(filenameDescriptionRegex);
+        // Debug: Log what text content we're receiving
+        console.log('Strong renderer received text:', JSON.stringify(textContent));
         
-        if (match) {
+        // 1. Enhanced filename-description pattern (requires actual file extension)
+        const filenameRegex = /^([0-9._a-zA-Z-]+\.(md|txt|js|ts|py|java|cpp|c|h|css|html|json|xml|yaml|yml|sql|sh|bat|ps1))\s*\(([^)]+)\)$/;
+        // 2. Version numbers: v1.2.3, version 2.0, etc.
+        const versionRegex = /^(v?\d+\.\d+(\.\d+)?(-[a-zA-Z0-9]+)?)$/i;
+        // 3. Issue/PR references: #123, issue-456, PR-789
+        const issueRegex = /^(#\d+|issue-\d+|pr-\d+|bug-\d+)$/i;
+        // 4. Code references: `function()`, `variable`, etc.
+        const codeRefRegex = /^([a-zA-Z_$][a-zA-Z0-9_$]*\s*\(\))$/;
+        // 5. Status indicators: TODO, FIXME, DONE, etc.
+        const statusRegex = /^(TODO|FIXME|DONE|WIP|REVIEW|APPROVED|REJECTED)$/i;
+
+        // Pattern to match underscore-separated content with colons, brackets, or parentheses
+        // Examples: MY_CONTENT:, MY_CONTENT[], MY_CONTENT(), MY_CONTENT1:, etc.
+        // Also supports mixed case and numbers: Justification_for_Multi-Points
+        const underscoreContentRegex = /^([A-Z_]+[A-Z0-9_]*[:\]\[()]*)$/;
+        
+        // Pattern to match numbered sections with descriptions: 02.1 (Reshard), 04 (Aggregation), etc.
+        const numberedSectionRegex = /^([0-9]+(?:\.[0-9]+)?)\s*\(([^)]+)\)$/;
+        
+        // Pattern to match space-separated content: Justification for Multi-Points, etc.
+        const spaceSeparatedRegex = /^([A-Z][a-zA-Z\s-]+[A-Z][a-zA-Z\s-]*)$/;
+
+        // Apply your detection logic - ALL bold text goes through this renderer
+        console.log('Strong renderer called with:', JSON.stringify(textContent));
+        
+        if (filenameRegex.test(textContent)) {
+            // Handle filename-description format
+            const match = textContent.match(filenameRegex);
+            //@ts-ignore
             const [, filename, extension, description] = match;
             return `<strong class="filename-description">
                 <span class="filename">${filename}</span>
                 <span class="description">(${description})</span>
             </strong>`;
+
+        } else if (numberedSectionRegex.test(textContent)) {
+            const match = textContent.match(numberedSectionRegex);
+            //@ts-ignore
+            const [, number, description] = match;
+            return `<strong class="numbered-section">
+                <span class="number">${number}</span>
+                <span class="description">(${description})</span>
+            </strong>`;
+        } else if (versionRegex.test(textContent)) {
+            // Handle version numbers
+            return `<strong class="version-number">${textContent}</strong>`;
+        } else if (issueRegex.test(textContent)) {
+            // Handle issue/PR references
+            return `<strong class="issue-reference">${textContent}</strong>`;
+        } else if (statusRegex.test(textContent)) {
+            // Handle status indicators
+            return `<strong class="status-indicator">${textContent}</strong>`;
+        } else if (codeRefRegex.test(textContent)) {
+            // Handle code references
+            return `<strong class="code-reference">${textContent}</strong>`;
+        } else if (underscoreContentRegex.test(textContent)) {
+            return `<strong class="underscore-content">
+                <span class="content">${textContent}</span>
+            </strong>`;
+        } else if (spaceSeparatedRegex.test(textContent)) {
+            return `<strong class="space-separated">
+                <span class="content">${textContent}</span>
+            </strong>`;
         }
-        
-        // Default strong rendering for other cases
+
+        // Default strong rendering for ALL other cases (any text with **)
         return `<strong>${textContent}</strong>`;
     };
-    
-    renderer.code = function(code: any) {
+
+    renderer.code = function (code: any) {
         if (code.lang === 'mermaid') {
             const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
             const codeString = typeof code === 'string' ? code : code.text || String(code);
             const sanitizedCode = sanitizeMermaidCode(codeString);
             return `<div class="mermaid" id="${id}">${sanitizedCode}</div>`;
         }
-        
+
         // Use default code rendering for other languages
         return this.constructor.prototype.code.call(this, code);
     };
-    
+
     return renderer;
 };
 
@@ -128,13 +187,14 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 hasBrackets: content.includes('\\[')
             });
 
-            // Apply custom renderer with mermaid handling
-            marked.use({ renderer: customRenderer });
+            // Create marked instance with custom renderer
+            const markedInstance = createMarkedInstance(customRenderer);
 
             // Render the markdown content using marked with custom renderer
             console.log('Processing content with marked (custom renderer):', content.substring(0, 200) + '...');
+            console.log('Full content to parse:', content);
 
-            let renderedHtml = marked.parse(content) as string;
+            let renderedHtml = markedInstance.parse(content) as string;
             console.log('Marked render completed, HTML length:', renderedHtml.length);
             console.log('Rendered HTML sample:', renderedHtml.substring(0, 500) + '...');
 

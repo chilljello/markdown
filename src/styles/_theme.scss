@@ -728,6 +728,166 @@ textarea:focus {
     }
   }
 
+  // Underscore content format styling (MY_CONTENT1, MY_CONTENT2, etc.)
+  strong.underscore-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--chart-1));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--primary);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    .content {
+      color: white;
+      font-weight: 700;
+    }
+    
+    // Add a subtle icon or indicator
+    &::before {
+      content: "🏷️";
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+    }
+    
+    // Hover effect
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+  }
+
+  // Numbered section format styling (02.1 (Reshard), 04 (Aggregation), etc.)
+  strong.numbered-section {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    background: #74816c;
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--chart-2);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    margin: 1px;
+    .number {
+      color: white;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.125rem 0.25rem;
+      border-radius: var(--radius-sm);
+    }
+    
+    .description {
+      color: white;
+      font-weight: 500;
+      font-style: italic;
+    }
+    
+    // Add a subtle icon or indicator
+    &::before {
+      content: "📋";
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+    }
+    
+    // Hover effect
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+    }
+  }
+
+  // Space-separated content format styling (Justification for Multi-Points, etc.)
+  strong.space-separated {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--chart-3), var(--chart-4));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--chart-3);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    .content {
+      color: white;
+      font-weight: 600;
+    }
+    
+    // Add a subtle icon or indicator
+    &::before {
+      content: "📝";
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+    }
+    
+    // Hover effect
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+  }
+
+  // Additional pattern styling
+  strong.version-number {
+    background: var(--chart-2);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  strong.issue-reference {
+    background: var(--chart-3);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  strong.status-indicator {
+    background: var(--chart-4);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  strong.code-reference {
+    background: var(--muted);
+    color: var(--foreground);
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+  }
+
   em,
   i {
     font-style: italic;
@@ -1187,6 +1347,56 @@ textarea:focus {
     
     .description {
       color: var(--muted-foreground);
+    }
+  }
+
+  // Dark theme underscore content styling
+  strong.underscore-content {
+    background: linear-gradient(135deg, var(--primary), var(--chart-1));
+    border-color: var(--primary);
+    color: white;
+    
+    .content {
+      color: white;
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Dark theme numbered section styling
+  strong.numbered-section {
+    background: var(--chart-2);
+    border-color: var(--chart-2);
+    color: white;
+    
+    .number {
+      color: white;
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .description {
+      color: white;
+    }
+    
+    &:hover {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  // Dark theme space-separated styling
+  strong.space-separated {
+    background: linear-gradient(135deg, var(--chart-3), var(--chart-4));
+    border-color: var(--chart-3);
+    color: white;
+    
+    .content {
+      color: white;
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
   }
 
