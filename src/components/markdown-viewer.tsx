@@ -203,7 +203,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         domDelay: 100,
         panZoomDelay: 200,
         fallbackDelay: 300,
-        enableLogging: true
+        enableLogging: false
     });
 
     // Create custom renderer with access to sanitizeMermaidCode
@@ -272,13 +272,10 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         }
     }, [processedHtml, renderMermaidDiagrams, isMounted, addPanZoomToChart]);
 
-
-
     return (
         <Card className={cn("overflow-auto", className)}>
             <div
                 ref={(el) => {
-                    console.log('Container ref callback called:', { el, hasEl: !!el });
                     containerRef.current = el;
                 }}
                 className="markdown-body mathjax-container"

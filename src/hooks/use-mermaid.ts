@@ -22,7 +22,7 @@ export function useMermaid(options: UseMermaidOptions = {}): UseMermaidReturn {
     domDelay = 100,
     panZoomDelay = 200,
     fallbackDelay = 300,
-    enableLogging = true
+    enableLogging = false
   } = options;
 
   // Function to sanitize mermaid code blocks to prevent parsing issues

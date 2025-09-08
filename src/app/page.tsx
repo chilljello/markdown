@@ -32,6 +32,7 @@ import {
   decompressContent,
   isCompressedContent,
 } from "../lib/compression";
+import type { FileMetadata } from "../actions/file-actions";
 import { getSearchParam } from "../lib/url-utils";
 import {
   Dialog,
@@ -41,95 +42,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "../components/ui/dialog";
-
-// Sample markdown with Mermaid diagram for demonstration
-const SAMPLE_MARKDOWN = `# Markdown Mermaid Viewer
-
-Welcome to the Markdown Mermaid Viewer! This tool allows you to:
-
-### System Components
-- **Consensus Layer**: Validates and orders transactions in the DAG via proof-of-stake or similar, ensuring acyclic integrity.
-- **CLOB**: Off-chain or in-memory order book for matching buy/sell orders; outputs matched trades to the risk engine.
-- **Risk Engine**: Processes post-match data:
-  - Update user positions and compute PNL (e.g., \( \text{PNL} = (\text{current_price} - \text{entry_price}) \times \text{position_size} \)).
-  - Check liquidation thresholds (e.g., if margin ratio < 1.1, trigger liquidation).
-  - Portfolio management: Aggregate assets, risks, and bucket IDs (e.g., low/medium/high risk buckets).
-  - Bucket ID: A categorization (e.g., hash-based or exposure-based ID) for grouping similar risk profiles.
-- **DAG Network**: Transactions as vertices, dependencies as edges. Shards form sub-DAGs with cross-shard links.
-- **Nodes**: Heterogeneous with sizes \\( s_i \\) (normalized, \\( \sum s_i = 1 \\)), representing capacity.
-
-\`\`\`javascript
-const highlight = "code";
-\`\`\`
-
-- Write and edit Markdown content
-- Render Mermaid diagrams inside your Markdown
-- Preview the rendered content in real-time
-- Import and export your Markdown files
-
-## Example Mermaid Diagram
-
-\`\`\`mermaid
-graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
-    D --> B
-    C --> E[Continue]
-\`\`\`
-
-## Flowchart Example
-
-\`\`\`mermaid
-flowchart LR
-    A[Hard edge] -->|Link text| B(Round edge)
-    B --> C{Decision}
-    C -->|One| D[Result one]
-    C -->|Two| E[Result two]
-\`\`\`
-
-## Sequence Diagram Example
-
-\`\`\`mermaid
-sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->>John: Hello John, how are you?
-    loop Healthcheck
-        John->>John: Fight against hypochondria
-    end
-    Note right of John: Rational thoughts <br/>prevail!
-    John-->>Alice: Great!
-    John->>Bob: How about you?
-    Bob-->>John: Jolly good!
-\`\`\`
-
-## Class Diagram Example
-
-\`\`\`mermaid
-classDiagram
-    Animal <|-- Duck
-    Animal <|-- Fish
-    Animal <|-- Zebra
-    Animal : +int age
-    Animal : +String gender
-    Animal: +isMammal()
-    Animal: +mate()
-    class Duck{
-        +String beakColor
-        +swim()
-        +quack()
-    }
-    class Fish{
-        -int sizeInFeet
-        -canEat()
-    }
-    class Zebra{
-        +bool is_wild
-        +run()
-    }
-\`\`\`
-`;
+import { SAMPLE_MARKDOWN } from "@/lib/sample";
 
 function HomeContent({
   viewMode,
@@ -140,6 +53,8 @@ function HomeContent({
   contentToLoad,
   onContentLoaded,
   createFile,
+  updateFile,
+  currentFile,
 }: {
   viewMode: "split" | "fullscreen";
   onCopy: (content: string) => void;
@@ -149,9 +64,9 @@ function HomeContent({
   contentToLoad?: string | null;
   onContentLoaded?: () => void;
   createFile: (name: string, content: string, tags?: string[]) => Promise<any>;
+  updateFile: (id: string, content: string) => Promise<any>;
+  currentFile: FileMetadata | null;
 }) {
-  const contentParam = getSearchParam("content");
-
   // Helper function to decode content parameter (handles both compressed and raw content)
   const decodeContentParam = (param: string | null): string => {
     if (!param) return SAMPLE_MARKDOWN;
@@ -174,9 +89,8 @@ function HomeContent({
       return SAMPLE_MARKDOWN;
     }
   };
-
+  const contentParam = getSearchParam("content");
   const [markdown, setMarkdown] = useState(decodeContentParam(contentParam));
-
   // Update markdown when contentParam changes
   useEffect(() => {
     if (contentParam) {
@@ -205,19 +119,25 @@ function HomeContent({
   }, [contentToLoad, onViewModeChange, onActiveTabChange, onContentLoaded]);
 
 
-  // Pass the current markdown content to the copy function and create a new file
+  // Smart save logic: update existing file or create new file
   const handleSave = async (content: string) => {
     setMarkdown(content);
     // Update the copy function's access to current content
     onCopy(content);
-    
-    // Create a new file with the title "new-doc" using the same functionality as handleCreateFile
+
     try {
-      await createFile("new-doc", content);
-      toast.success('File "new-doc" created successfully');
+      if (currentFile) {
+        // Update existing file from file manager
+        await updateFile(currentFile.id, content);
+        toast.success(`File "${currentFile.name}" updated successfully`);
+      } else {
+        // Create new file for new content
+        await createFile("new-doc", content);
+        toast.success('File "new-doc" created successfully');
+      }
     } catch (error) {
-      console.error('Failed to create file:', error);
-      toast.error('Failed to create file');
+      console.error('Failed to save file:', error);
+      toast.error('Failed to save file');
     }
   };
 
@@ -285,12 +205,13 @@ function HomeContent({
 }
 
 interface HomePageProps {
-  onNavigate?: (route: 'home' | 'doc', content?: string) => void;
+  onNavigate?: (route: 'home' | 'doc', content?: string, fileMetadata?: FileMetadata) => void;
   contentToLoad?: string | null;
+  fileToLoad?: FileMetadata | null;
   onContentLoaded?: () => void;
 }
 
-export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }: HomePageProps) {
+export default function HomePage({ onNavigate, contentToLoad, fileToLoad, onContentLoaded }: HomePageProps) {
   const [viewMode, setViewMode] = useState<"split" | "fullscreen">("fullscreen");
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentMarkdown, setCurrentMarkdown] = useState(SAMPLE_MARKDOWN);
@@ -299,9 +220,10 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
   const [isSharing, setIsSharing] = useState(false);
   const [lastSharedUrl, setLastSharedUrl] = useState<string | null>(null);
   const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [currentFile, setCurrentFile] = useState<FileMetadata | null>(null);
 
-  // File manager hook for creating files
-  const { createFile } = useFileManager({
+  // File manager hook for creating and updating files
+  const { createFile, updateFile } = useFileManager({
     autoSave: false,
     maxFiles: 100
   });
@@ -321,6 +243,22 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
   const handleMarkdownUpdate = (content: string) => {
     setCurrentMarkdown(content);
   };
+
+  // Sync currentMarkdown with contentToLoad for share URL
+  useEffect(() => {
+    if (contentToLoad) {
+      setCurrentMarkdown(contentToLoad);
+    }
+  }, [contentToLoad]);
+
+  // Sync currentFile with fileToLoad for smart save logic
+  useEffect(() => {
+    if (fileToLoad) {
+      setCurrentFile(fileToLoad);
+    } else {
+      setCurrentFile(null);
+    }
+  }, [fileToLoad]);
 
   // Generate shareable URL with gzip compression
   const handleShare = useCallback(() => {
@@ -473,12 +411,12 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
   }, [handleCopy, activeTab]);
 
   return (
-      <Layout className={cn(
-        "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
-        viewMode === "fullscreen" &&
-        activeTab === "preview" &&
-        "bg-gradient-to-br from-background to-muted/20",
-      )}>
+    <Layout className={cn(
+      "flex min-h-screen flex-col transition-all duration-300 ease-in-out",
+      viewMode === "fullscreen" &&
+      activeTab === "preview" &&
+      "bg-gradient-to-br from-background to-muted/20",
+    )}>
       <header
         className={cn(
           "border-b sticky top-0 z-50 bg-background transition-all duration-300 ease-in-out",
@@ -660,13 +598,15 @@ export default function HomePage({ onNavigate, contentToLoad, onContentLoaded }:
           contentToLoad={contentToLoad}
           onContentLoaded={onContentLoaded}
           createFile={createFile}
+          updateFile={updateFile}
+          currentFile={currentFile}
         />
       </Suspense>
 
       {!(viewMode === "fullscreen" && activeTab === "preview") && (
         <footer className="py-6 border-t">
           <div className="container px-4 text-center text-sm text-muted-foreground">
-            A tool for rendering Markdown with Mermaid diagrams
+            Build by MorganX
           </div>
         </footer>
       )}

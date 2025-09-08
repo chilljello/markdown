@@ -48,11 +48,12 @@ import { toast } from 'sonner';
 import { DragDropZone } from '@/components/drag-drop-zone';
 import { getShareableUrl } from '@/lib/compression';
 import { getDecompressedContent } from '@/actions/file-actions';
+import type { FileMetadata } from '@/actions/file-actions';
 import { ThemeToggle } from '@/components/theme-toggle';
 // MathJaxProvider removed - using Mathpix for LaTeX rendering
 
 interface DocPageProps {
-  onNavigate?: (route: 'home' | 'doc', content?: string) => void;
+  onNavigate?: (route: 'home' | 'doc', content?: string, fileMetadata?: FileMetadata) => void;
 }
 
 export default function DocPage({ onNavigate }: DocPageProps) {
@@ -421,11 +422,11 @@ export default function DocPage({ onNavigate }: DocPageProps) {
                           }`}
                           onClick={() => {
                             selectFile(file.id);
-                            // Navigate to home page with document content
+                            // Navigate to home page with document content and file metadata
                             const content = file.isCompressed 
                               ? getDecompressedContent(file)
                               : file.content;
-                            onNavigate?.('home', content);
+                            onNavigate?.('home', content, file);
                           }}
                         >
                           <div className="flex items-start justify-between">

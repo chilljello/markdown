@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import HomePage from '@/app/page';
 import DocPage from '@/app/doc';
 import DebugPage from '@/app/debug';
+import type { FileMetadata } from '@/actions/file-actions';
 
 type Route = 'home' | 'doc' | 'debug';
+
+interface NavigationData {
+  content: string;
+  fileMetadata?: FileMetadata;
+}
 
 export function Router() {
   const [currentRoute, setCurrentRoute] = useState<Route>('home');
   const [contentToLoad, setContentToLoad] = useState<string | null>(null);
+  const [fileToLoad, setFileToLoad] = useState<FileMetadata | null>(null);
 
   // Handle browser navigation
   useEffect(() => {
@@ -35,10 +42,11 @@ export function Router() {
   }, []);
 
   // Navigation function
-  const navigate = (route: Route, content?: string) => {
+  const navigate = (route: Route, content?: string, fileMetadata?: FileMetadata) => {
     setCurrentRoute(route);
     if (content) {
       setContentToLoad(content);
+      setFileToLoad(fileMetadata || null);
     }
     if (route === 'doc') {
       window.history.pushState({}, '', '/doc');
@@ -51,7 +59,7 @@ export function Router() {
 
   // Clear content after it's been passed to prevent re-application
   const handleContentLoaded = () => {
-    setContentToLoad(null);
+    //setContentToLoad(null);
   };
 
   // Render current route
@@ -62,6 +70,6 @@ export function Router() {
       return <DebugPage />;
     case 'home':
     default:
-      return <HomePage onNavigate={navigate} contentToLoad={contentToLoad} onContentLoaded={handleContentLoaded} />;
+      return <HomePage onNavigate={navigate} contentToLoad={contentToLoad} fileToLoad={fileToLoad} onContentLoaded={handleContentLoaded} />;
   }
 }
