@@ -43,6 +43,7 @@
         "lucide-react": "^0.479.0",
         "marked": "^15.0.7",
         "marked-highlight": "^2.2.2",
+        "marked-katex-extension": "^5.1.5",
         "mermaid": "^11.11.0",
         "pako": "2.1.0",
         "react": "^19.0.0",
@@ -821,6 +822,8 @@
     "marked": ["marked@15.0.12", "https://registry.npmmirror.com/marked/-/marked-15.0.12.tgz", { "bin": { "marked": "bin/marked.js" } }, "sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA=="],
 
     "marked-highlight": ["marked-highlight@2.2.2", "https://registry.npmmirror.com/marked-highlight/-/marked-highlight-2.2.2.tgz", { "peerDependencies": { "marked": ">=4 <17" } }, "sha512-KlHOP31DatbtPPXPaI8nx1KTrG3EW0Z5zewCwpUj65swbtKOTStteK3sNAjBqV75Pgo3fNEVNHeptg18mDuWgw=="],
+
+    "marked-katex-extension": ["marked-katex-extension@5.1.5", "https://registry.npmmirror.com/marked-katex-extension/-/marked-katex-extension-5.1.5.tgz", { "peerDependencies": { "katex": ">=0.16 <0.17", "marked": ">=4 <17" } }, "sha512-AAlfnpi3ivBWt4Paqb8YW2R7eq2ESJ+AtrgJU1jImUwnxHJAhPkZ5MsR3POnWV9HKwlBLZTVGC5I5+I2xWRiFg=="],
 
     "mdast-util-find-and-replace": ["mdast-util-find-and-replace@3.0.2", "https://registry.npmmirror.com/mdast-util-find-and-replace/-/mdast-util-find-and-replace-3.0.2.tgz", { "dependencies": { "@types/mdast": "^4.0.0", "escape-string-regexp": "^5.0.0", "unist-util-is": "^6.0.0", "unist-util-visit-parents": "^6.0.0" } }, "sha512-Tmd1Vg/m3Xz43afeNxDIhWRtFZgM2VLyaf4vSTYwudTyeuTneoL3qtWMA5jeLyz/O1vDJmmV4QuScFCA2tBPwg=="],
 

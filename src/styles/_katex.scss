@@ -1,0 +1,11 @@
+.katex-version {
+    display: none;
+}
+
+.katex-version::after {
+    content: "0.10.2 or earlier";
+}
+
+.katex {
+    font-size: 1.7em;
+}

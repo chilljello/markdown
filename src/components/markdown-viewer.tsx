@@ -4,11 +4,14 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
 import { cn } from "../lib/utils";
 import mermaid from "mermaid";
-import { Marked, Renderer } from 'marked';
+import { Marked, Renderer, type Tokens } from 'marked';
 import { usePanZoom } from '../hooks/use-pan-zoom';
 import { useMermaid } from '../hooks/use-mermaid';
 import hljs from 'highlight.js';
 import { markedHighlight } from "marked-highlight";
+import markedKatex, { type MarkedKatexOptions } from "marked-katex-extension";
+
+
 // Initialize mermaid with better error handling
 mermaid.initialize({
     startOnLoad: false,
@@ -16,24 +19,42 @@ mermaid.initialize({
     securityLevel: "loose",
     logLevel: 'error'
 });
-
+const options: MarkedKatexOptions = {
+    throwOnError: true,
+    output: "mathml",
+    displayMode: true,
+    minRuleThickness: 0.2,
+    maxExpand: 900,
+    maxSize: 100000,
+    nonStandard: true, // Allow non-standard LaTeX commands
+};
 // Create a function to create marked instance with custom renderer
 const createMarkedInstance = (customRenderer: any) => {
-  return new Marked(
-    markedHighlight({
-      emptyLangClass: 'hljs',
-      langPrefix: 'hljs language-',
-      highlight(code, lang, info) {
-        // Skip highlighting for mermaid diagrams - they'll be handled by our custom renderer
-        if (lang === 'mermaid') {
-          return code;
+    const instance = new Marked(
+        markedHighlight({
+            emptyLangClass: 'hljs',
+            langPrefix: 'hljs language-',
+            highlight(code, lang, info) {
+                // Skip highlighting for mermaid diagrams - they'll be handled by our custom renderer
+                if (lang === 'mermaid') {
+                    return code;
+                }
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            }
+        }),
+        {
+            renderer: customRenderer,
+            // Ensure inline parsing is enabled
+            breaks: true,
+            gfm: true,
+            // Force inline parsing for list items
+            pedantic: false
         }
-        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-        return hljs.highlight(code, { language }).value;
-      }
-    }),
-    { renderer: customRenderer }
-  );
+    );
+    instance.use(markedKatex(options));
+
+    return instance;
 };
 
 // Create a function to create the custom renderer with access to sanitizeMermaidCode
@@ -41,94 +62,76 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
     // Create a new renderer instance to get default behavior
     const renderer = new Renderer();
 
+    // Create a marked instance for inline parsing within list items
+    const inlineMarked = new Marked({
+        breaks: true,
+        gfm: true,
+        pedantic: false
+    });
+    inlineMarked.use(markedKatex(options));
+
     // Override only the methods we need to customize
-    renderer.text = function (text: any) {
-        // Match inline LaTeX math expressions (e.g., \(...\))
+    renderer.text = function (text: Tokens.Text | Tokens.Escape) {
+        const textContent = String(text.text || text);
+        // Check for LaTeX math expressions in the text
         const latexRegex = /\\\([^\\]*\\\)/g;
+        const dollarRegex = /\$[^$]+\$/g;
         if (text.raw && latexRegex.test(text.raw)) {
+            console.log('Found LaTeX expression in text:', text.raw);
             return String(text.raw); // Return unescaped LaTeX expressions
         }
-        return String(text.text || text); // Default behavior for other text
+
+        if (dollarRegex.test(textContent)) {
+            console.log('Found dollar math expression in text:', textContent);
+            return textContent; // Return text with dollar math expressions for MathJax
+        }
+
+        return textContent; // Default behavior for other text
+    };
+
+    renderer.list = function (list: Tokens.List): string {
+        const type = list.ordered ? 'ol' : 'ul';
+        const startAttr = list.ordered && list.start !== 1 ? ` start="${list.start}"` : '';
+        return `<${type}${startAttr} class="custom-list">\n${list.items.map(item => this.listitem(item)).join('')}</${type}>\n`;
+    };
+
+    renderer.listitem = function (item: Tokens.ListItem): string {
+        // Since marked.js doesn't parse inline content in list items with custom renderers,
+        // we need to manually parse the text content
+        let processedContent = '';
+        if (item.text) {
+            console.log('Manually parsing list item text:', item.text);
+            try {
+                // Parse the text as inline content to get proper tokenization
+                const result = inlineMarked.parseInline(item.text);
+                processedContent = typeof result === 'string' ? result : item.text;
+                console.log('Inline parsing result:', processedContent);
+            } catch (parseError) {
+                console.log('Inline parsing failed, using raw text:', parseError);
+                processedContent = item.text;
+            }
+        } else if (item.tokens && item.tokens.length > 0) {
+            // If we somehow have tokens, process them
+            processedContent = item.tokens.map(token => {
+                console.log('Processing token:', token.type, token);
+                const rendererMethod = (this as any)[token.type];
+                return rendererMethod ? rendererMethod.call(this, token) : token.raw || '';
+            }).join('');
+        }
+
+        return `<li class="custom-list-item">${processedContent}</li>\n`;
     };
 
     // Enhanced strong/bold text renderer for filename-description format
     renderer.strong = function (text: any) {
         const textContent = String(text.text || text);
-        
-        // Debug: Log what text content we're receiving
-        console.log('Strong renderer received text:', JSON.stringify(textContent));
-        
-        // 1. Enhanced filename-description pattern (requires actual file extension)
-        const filenameRegex = /^([0-9._a-zA-Z-]+\.(md|txt|js|ts|py|java|cpp|c|h|css|html|json|xml|yaml|yml|sql|sh|bat|ps1))\s*\(([^)]+)\)$/;
-        // 2. Version numbers: v1.2.3, version 2.0, etc.
-        const versionRegex = /^(v?\d+\.\d+(\.\d+)?(-[a-zA-Z0-9]+)?)$/i;
-        // 3. Issue/PR references: #123, issue-456, PR-789
-        const issueRegex = /^(#\d+|issue-\d+|pr-\d+|bug-\d+)$/i;
-        // 4. Code references: `function()`, `variable`, etc.
-        const codeRefRegex = /^([a-zA-Z_$][a-zA-Z0-9_$]*\s*\(\))$/;
-        // 5. Status indicators: TODO, FIXME, DONE, etc.
-        const statusRegex = /^(TODO|FIXME|DONE|WIP|REVIEW|APPROVED|REJECTED)$/i;
-
-        // Pattern to match underscore-separated content with colons, brackets, or parentheses
-        // Examples: MY_CONTENT:, MY_CONTENT[], MY_CONTENT(), MY_CONTENT1:, etc.
-        // Also supports mixed case and numbers: Justification_for_Multi-Points
-        const underscoreContentRegex = /^([A-Z_]+[A-Z0-9_]*[:\]\[()]*)$/;
-        
-        // Pattern to match numbered sections with descriptions: 02.1 (Reshard), 04 (Aggregation), etc.
-        const numberedSectionRegex = /^([0-9]+(?:\.[0-9]+)?)\s*\(([^)]+)\)$/;
-        
-        // Pattern to match space-separated content: Justification for Multi-Points, etc.
-        const spaceSeparatedRegex = /^([A-Z][a-zA-Z\s-]+[A-Z][a-zA-Z\s-]*)$/;
-
-        // Apply your detection logic - ALL bold text goes through this renderer
-        console.log('Strong renderer called with:', JSON.stringify(textContent));
-        
-        if (filenameRegex.test(textContent)) {
-            // Handle filename-description format
-            const match = textContent.match(filenameRegex);
-            //@ts-ignore
-            const [, filename, extension, description] = match;
-            return `<strong class="filename-description">
-                <span class="filename">${filename}</span>
-                <span class="description">(${description})</span>
-            </strong>`;
-
-        } else if (numberedSectionRegex.test(textContent)) {
-            const match = textContent.match(numberedSectionRegex);
-            //@ts-ignore
-            const [, number, description] = match;
-            return `<strong class="numbered-section">
-                <span class="number">${number}</span>
-                <span class="description">(${description})</span>
-            </strong>`;
-        } else if (versionRegex.test(textContent)) {
-            // Handle version numbers
-            return `<strong class="version-number">${textContent}</strong>`;
-        } else if (issueRegex.test(textContent)) {
-            // Handle issue/PR references
-            return `<strong class="issue-reference">${textContent}</strong>`;
-        } else if (statusRegex.test(textContent)) {
-            // Handle status indicators
-            return `<strong class="status-indicator">${textContent}</strong>`;
-        } else if (codeRefRegex.test(textContent)) {
-            // Handle code references
-            return `<strong class="code-reference">${textContent}</strong>`;
-        } else if (underscoreContentRegex.test(textContent)) {
-            return `<strong class="underscore-content">
-                <span class="content">${textContent}</span>
-            </strong>`;
-        } else if (spaceSeparatedRegex.test(textContent)) {
-            return `<strong class="space-separated">
-                <span class="content">${textContent}</span>
-            </strong>`;
-        }
-
         // Default strong rendering for ALL other cases (any text with **)
         return `<strong>${textContent}</strong>`;
     };
 
     renderer.code = function (code: any) {
         if (code.lang === 'mermaid') {
+            console.log('Processing Mermaid diagram:', code.text);
             const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
             const codeString = typeof code === 'string' ? code : code.text || String(code);
             const sanitizedCode = sanitizeMermaidCode(codeString);
@@ -178,39 +181,17 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 return "";
             }
 
-            console.log('=== MARKED PROCESSING DEBUG ===');
-            console.log('Original content sample:', content.substring(0, 200));
-            console.log('Contains math delimiters:', {
-                hasDollarInline: content.includes('$') && !content.includes('$$'),
-                hasDollarDisplay: content.includes('$$'),
-                hasParentheses: content.includes('\\('),
-                hasBrackets: content.includes('\\[')
-            });
+
 
             // Create marked instance with custom renderer
             const markedInstance = createMarkedInstance(customRenderer);
-
-            // Render the markdown content using marked with custom renderer
-            console.log('Processing content with marked (custom renderer):', content.substring(0, 200) + '...');
-            console.log('Full content to parse:', content);
-
             let renderedHtml = markedInstance.parse(content) as string;
-            console.log('Marked render completed, HTML length:', renderedHtml.length);
-            console.log('Rendered HTML sample:', renderedHtml.substring(0, 500) + '...');
 
-            // Check what happened to math delimiters after marked processing
-            console.log('Math delimiters after marked:', {
-                hasDollarInline: renderedHtml.includes('$') && !renderedHtml.includes('$$'),
-                hasDollarDisplay: renderedHtml.includes('$$'),
-                hasParentheses: renderedHtml.includes('\\('),
-                hasBrackets: renderedHtml.includes('\\[')
-            });
 
-            console.log('Final HTML sample:', renderedHtml.substring(0, 500) + '...');
             return renderedHtml;
         } catch (error) {
             console.error("Error processing markdown:", error);
-            return `<div class="error">Error processing markdown content: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
+            return `<div class="error">${error instanceof Error ? error.message : 'Unknown error'}</div>`;
         }
     }, [content, customRenderer]);
 
@@ -242,47 +223,6 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         }
     }, [content, processMarkdown, isMounted]);
 
-    // Process math expressions with MathJax v4.0.0
-    const processMathExpressions = useCallback(() => {
-        try {
-            console.log('=== MATHJAX v4.0.0 CHTML PROCESSING DEBUG ===');
-            if (containerRef.current && (window as any).MathJax) {
-                // Process the entire container - MathJax v4.0.0 will find and process all math expressions
-                (window as any).MathJax.typesetPromise([containerRef.current]).then(() => {
-                    console.log('MathJax v4.0.0 CHTML processing completed successfully');
-                    // Check for processed math expressions (v4.0.0 CHTML output)
-                    const mathJaxElements = containerRef.current?.querySelectorAll('.MathJax, mjx-container, mjx-math, .mjx-chtml') || [];
-                    console.log(`Found ${mathJaxElements.length} MathJax v4.0.0 CHTML processed elements`);
-                    // Log some examples of processed math
-                    mathJaxElements.forEach((element, index) => {
-                        if (index < 3) { // Log first 3 elements
-                            console.log(`MathJax v4.0.0 CHTML element ${index + 1}:`, {
-                                tagName: element.tagName,
-                                className: element.className,
-                                innerHTML: element.innerHTML.substring(0, 100) + '...'
-                            });
-                        }
-                    });
-                    // Global notification for debug page
-                    if ((window as any).onMathJaxProcessingComplete) {
-                        (window as any).onMathJaxProcessingComplete(mathJaxElements.length);
-                    }
-                }).catch((error: any) => {
-                    console.error('MathJax v4.0.0 processing failed:', error);
-                    console.error('Error details:', {
-                        message: error.message,
-                        stack: error.stack
-                    });
-                });
-            } else if (!(window as any).MathJax) {
-                console.warn('MathJax v4.0.0 with CHTML output is not available on window object');
-            } else {
-                console.log('Container ref not available');
-            }
-        } catch (error) {
-            console.warn('Error processing math expressions:', error);
-        }
-    }, [processedHtml]);
 
     // Render mermaid diagrams and process math after component updates
     useEffect(() => {
@@ -299,15 +239,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             const timer = setTimeout(() => {
                 console.log('Timer fired, calling renderMermaidDiagrams...');
                 renderMermaidDiagrams(containerRef, isMounted, addPanZoomToChart);
-                // Process math expressions after mermaid rendering
-                setTimeout(() => {
-                    console.log('Timer fired, calling processMathExpressions...');
-                    processMathExpressions();
-                }, 200);
-
-
             }, 100);
-
             return () => {
                 console.log('Cleaning up timer...');
                 clearTimeout(timer);
@@ -315,7 +247,9 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
         } else {
             console.log('Skipping mermaid and math processing due to missing conditions');
         }
-    }, [processedHtml, renderMermaidDiagrams, processMathExpressions, isMounted, addPanZoomToChart]);
+    }, [processedHtml, renderMermaidDiagrams, isMounted, addPanZoomToChart]);
+
+
 
     return (
         <Card className={cn("overflow-auto", className)}>

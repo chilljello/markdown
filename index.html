@@ -20,42 +20,7 @@
             window.global = window;
         }
     </script>
-    
-    <!-- MathJax v4.0.0 for LaTeX math rendering with CHTML output -->
-    <script>
-        window.MathJax = {
-            loader: { load: ['input/tex', 'output/svg'] },
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']],
-                processEscapes: true,
-                processEnvironments: true,
-                packages: ['base', 'ams', 'noerrors', 'noundefined']
-            },
-            chtml: {
-                scale: 1.0,
-                minScale: 0.5
-            },
-            options: {
-                enableMenu: true,
-                menuOptions: {
-                    settings: {
-                        texHints: true,
-                        semantics: false,
-                        zoom: 'NoZoom',
-                        zoomFactor: '1.5'
-                    }
-                }
-            },
-            startup: {
-                ready: () => {
-                    console.log('MathJax v4.0.0 with CHTML output is ready!');
-                    window.MathJax.startup.defaultReady();
-                }
-            }
-        };
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@4.0.0/tex-mml-chtml.js" defer></script>
+   
     
     <!-- Tailwind Config -->
     <script>

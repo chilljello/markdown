@@ -54,6 +54,7 @@
     "lucide-react": "^0.479.0",
     "marked": "^15.0.7",
     "marked-highlight": "^2.2.2",
+    "marked-katex-extension": "^5.1.5",
     "mermaid": "^11.11.0",
     "pako": "2.1.0",
     "react": "^19.0.0",

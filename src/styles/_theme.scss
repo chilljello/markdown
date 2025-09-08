@@ -624,6 +624,7 @@ textarea:focus {
     overflow-x: auto;
     border: 1px solid var(--border);
     background-color: rgb(142, 142, 142);
+
     code {
       padding: 0;
       border-radius: 0;
@@ -708,18 +709,18 @@ textarea:focus {
     border: 1px solid var(--border);
     font-family: var(--font-mono);
     font-size: 0.875rem;
-    
+
     .filename {
       color: var(--primary);
       font-weight: 700;
     }
-    
+
     .description {
       color: var(--muted-foreground);
       font-weight: 500;
       font-style: italic;
     }
-    
+
     // Add a subtle icon or indicator
     &::before {
       content: "📄";
@@ -735,7 +736,7 @@ textarea:focus {
     gap: 0.25rem;
     font-weight: 700;
     background: linear-gradient(135deg, var(--primary), var(--chart-1));
-    color: white;
+
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius);
     border: 1px solid var(--primary);
@@ -744,19 +745,19 @@ textarea:focus {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    
+
     .content {
-      color: white;
+      color: var(--foreground);
       font-weight: 700;
     }
-    
+
     // Add a subtle icon or indicator
     &::before {
       content: "🏷️";
       font-size: 0.75rem;
       margin-right: 0.25rem;
     }
-    
+
     // Hover effect
     &:hover {
       transform: translateY(-1px);
@@ -772,34 +773,35 @@ textarea:focus {
     gap: 0.25rem;
     font-weight: 600;
     background: #74816c;
-    color: white;
+
     padding: 0.15rem 0.5rem;
     border-radius: var(--radius);
     border: 1px solid var(--chart-2);
     font-family: var(--font-mono);
     font-size: 0.875rem;
     margin: 1px;
+
     .number {
-      color: white;
+      color: var(--foreground);
       font-weight: 700;
       background: rgba(255, 255, 255, 0.2);
       padding: 0.125rem 0.25rem;
       border-radius: var(--radius-sm);
     }
-    
+
     .description {
-      color: white;
+      color: var(--foreground);
       font-weight: 500;
       font-style: italic;
     }
-    
+
     // Add a subtle icon or indicator
     &::before {
       content: "📋";
       font-size: 0.75rem;
       margin-right: 0.25rem;
     }
-    
+
     // Hover effect
     &:hover {
       transform: translateY(-1px);
@@ -815,7 +817,7 @@ textarea:focus {
     gap: 0.25rem;
     font-weight: 600;
     background: linear-gradient(135deg, var(--chart-3), var(--chart-4));
-    color: white;
+
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius);
     border: 1px solid var(--chart-3);
@@ -824,19 +826,19 @@ textarea:focus {
     text-transform: capitalize;
     letter-spacing: 0.5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    
+
     .content {
-      color: white;
+      color: var(--foreground);
       font-weight: 600;
     }
-    
+
     // Add a subtle icon or indicator
     &::before {
       content: "📝";
       font-size: 0.75rem;
       margin-right: 0.25rem;
     }
-    
+
     // Hover effect
     &:hover {
       transform: translateY(-1px);
@@ -848,7 +850,7 @@ textarea:focus {
   // Additional pattern styling
   strong.version-number {
     background: var(--chart-2);
-    color: white;
+
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
@@ -858,7 +860,7 @@ textarea:focus {
 
   strong.issue-reference {
     background: var(--chart-3);
-    color: white;
+    color: var(--foreground);
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
@@ -868,7 +870,7 @@ textarea:focus {
 
   strong.status-indicator {
     background: var(--chart-4);
-    color: white;
+    color: var(--foreground);
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
@@ -1340,11 +1342,11 @@ textarea:focus {
   strong.filename-description {
     background: var(--muted);
     border-color: var(--border);
-    
+
     .filename {
       color: var(--primary);
     }
-    
+
     .description {
       color: var(--muted-foreground);
     }
@@ -1355,11 +1357,11 @@ textarea:focus {
     background: linear-gradient(135deg, var(--primary), var(--chart-1));
     border-color: var(--primary);
     color: white;
-    
+
     .content {
       color: white;
     }
-    
+
     &:hover {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
@@ -1370,16 +1372,16 @@ textarea:focus {
     background: var(--chart-2);
     border-color: var(--chart-2);
     color: white;
-    
+
     .number {
       color: white;
       background: rgba(255, 255, 255, 0.2);
     }
-    
+
     .description {
       color: white;
     }
-    
+
     &:hover {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     }
@@ -1390,11 +1392,11 @@ textarea:focus {
     background: linear-gradient(135deg, var(--chart-3), var(--chart-4));
     border-color: var(--chart-3);
     color: white;
-    
+
     .content {
       color: white;
     }
-    
+
     &:hover {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
