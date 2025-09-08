@@ -52,6 +52,7 @@ const createMarkedInstance = (customRenderer: any) => {
             pedantic: false
         }
     );
+    
     instance.use(markedKatex(options));
     //instance.use(extendedLatex());
     return instance;
@@ -239,7 +240,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
                 ref={(el) => {
                     containerRef.current = el;
                 }}
-                className="markdown-body mathjax-container"
+                className="markdown-body"
                 dangerouslySetInnerHTML={{ __html: processedHtml }}
             />
         </Card>

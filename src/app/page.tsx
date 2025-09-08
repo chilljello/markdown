@@ -183,13 +183,11 @@ function HomeContent({
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
-            <div className="h-full p-6">
-              <MarkdownViewer content={markdown} className="h-full w-full" />
-            </div>
+            <MarkdownViewer content={markdown} className="rounded-none border-0 h-full w-full" />
           </ResizablePanel>
         </ResizablePanelGroup>
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border-0">
           <MarkdownEditor
             initialContent={markdown}
             onSave={handleSave}

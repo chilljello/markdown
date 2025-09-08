@@ -8,11 +8,11 @@ import { Textarea } from "./ui/textarea";
 import { cn } from "../lib/utils";
 import { MarkdownViewer } from "./markdown-viewer";
 import { toast } from "sonner";
-import { 
-  Edit3, 
-  Eye, 
-  Download, 
-  Upload, 
+import {
+  Edit3,
+  Eye,
+  Download,
+  Upload,
   Save,
   Split,
   Maximize2
@@ -97,24 +97,24 @@ export function MarkdownEditor({
 
   return (
     <Card className={cn("h-full flex flex-col", className)}>
-    
+
       <CardContent className="flex-1 flex flex-col">
-        <Tabs 
-          value={activeTab} 
+        <Tabs
+          value={activeTab}
           onValueChange={(value) => onActiveTabChange(value as "edit" | "preview")}
           className="flex-1 flex flex-col"
         >
           <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger 
-              value="edit" 
+            <TabsTrigger
+              value="edit"
               className="flex items-center gap-2"
               onClick={() => onActiveTabChange("edit")}
             >
               <Edit3 className="h-4 w-4" />
               Edit
             </TabsTrigger>
-            <TabsTrigger 
-              value="preview" 
+            <TabsTrigger
+              value="preview"
               className="flex items-center gap-2"
               onClick={() => onActiveTabChange("preview")}
             >
@@ -151,14 +151,14 @@ export function MarkdownEditor({
                 Save
               </Button>
             </div>
-            
+
             <Textarea
               value={content}
               onChange={handleContentChange}
               placeholder="Write your markdown here..."
               className="flex-1 min-h-[400px] font-mono text-sm resize-none"
             />
-            
+
             {/* Hidden file input for import */}
             <input
               id="file-input"
@@ -168,12 +168,11 @@ export function MarkdownEditor({
               className="hidden"
             />
           </TabsContent>
-
           <TabsContent value="preview" className="flex-1">
             <div className="h-full overflow-auto">
-              <MarkdownViewer 
-                content={content} 
-                className="h-full w-full prose prose-lg max-w-none dark:prose-invert"
+              <MarkdownViewer
+                content={content}
+                className="h-full  border-0 w-full prose prose-lg max-w-none dark:prose-invert"
               />
             </div>
           </TabsContent>
