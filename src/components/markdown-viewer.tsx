@@ -53,7 +53,6 @@ const createMarkedInstance = (customRenderer: any) => {
         }
     );
     instance.use(markedKatex(options));
-
     return instance;
 };
 
@@ -69,24 +68,61 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
         pedantic: false
     });
     inlineMarked.use(markedKatex(options));
+    renderer.paragraph = function (text: Tokens.Paragraph): string {
+        const textContent = String(text.raw || text);
+          const result = inlineMarked.parseInline(textContent);
+        return `<p class="custom-paragraph">${result}</p>`;
+    }
 
     // Override only the methods we need to customize
     renderer.text = function (text: Tokens.Text | Tokens.Escape) {
         const textContent = String(text.text || text);
-        // Check for LaTeX math expressions in the text
-        const latexRegex = /\\\([^\\]*\\\)/g;
+        let processedText = textContent;
+
+        // Convert LaTeX inline math delimiters \( \) to $ $ only if found in pairs
+        const inlineMathRegex = /\\\([^\\]*?\\\)/g;
+        const inlineMatches = processedText.match(inlineMathRegex);
+        if (inlineMatches) {
+            processedText = processedText.replace(inlineMathRegex, (match) => {
+                // Remove the \( and \) delimiters and wrap with $ $
+                const content = match.slice(2, -2); // Remove \( and \)
+                console.log('Converting inline math:', match, 'to', `$${content}$`);
+                return `$${content}$`;
+            });
+        }
+
+        // Convert LaTeX block math delimiters \[ \] to $$ $$ only if found in pairs
+        const blockMathRegex = /\\\[[\s\S]*?\\\]/g;
+        const blockMatches = processedText.match(blockMathRegex);
+        if (blockMatches) {
+            processedText = processedText.replace(blockMathRegex, (match) => {
+                // Remove the \[ and \] delimiters and wrap with $$ $$
+                const content = match.slice(2, -2); // Remove \[ and \]
+                console.log('Converting block math:', match, 'to', `$$${content}$$`);
+                return `$$${content}$$`;
+            });
+        }
+
+        // Check if any conversions were made
+        if (processedText !== textContent) {
+            console.log('Converted LaTeX delimiters:', {
+                original: textContent,
+                converted: processedText,
+                inlinePairs: inlineMatches?.length || 0,
+                blockPairs: blockMatches?.length || 0
+            });
+        }
+
+        // Check for math expressions (both original and converted)
         const dollarRegex = /\$[^$]+\$/g;
-        if (text.raw && latexRegex.test(text.raw)) {
-            console.log('Found LaTeX expression in text:', text.raw);
-            return String(text.raw); // Return unescaped LaTeX expressions
+        const doubleDollarRegex = /\$\$[\s\S]*?\$\$/g;
+
+        if (dollarRegex.test(processedText) || doubleDollarRegex.test(processedText)) {
+            console.log('Found math expression in text:', processedText);
+            return processedText; // Return text with math expressions for MathJax
         }
 
-        if (dollarRegex.test(textContent)) {
-            console.log('Found dollar math expression in text:', textContent);
-            return textContent; // Return text with dollar math expressions for MathJax
-        }
-
-        return textContent; // Default behavior for other text
+        return processedText; // Default behavior for other text
     };
 
     renderer.list = function (list: Tokens.List): string {
@@ -131,7 +167,6 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
 
     renderer.code = function (code: any) {
         if (code.lang === 'mermaid') {
-            console.log('Processing Mermaid diagram:', code.text);
             const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
             const codeString = typeof code === 'string' ? code : code.text || String(code);
             const sanitizedCode = sanitizeMermaidCode(codeString);
@@ -180,14 +215,9 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
             if (!content.trim()) {
                 return "";
             }
-
-
-
             // Create marked instance with custom renderer
             const markedInstance = createMarkedInstance(customRenderer);
             let renderedHtml = markedInstance.parse(content) as string;
-
-
             return renderedHtml;
         } catch (error) {
             console.error("Error processing markdown:", error);
@@ -207,14 +237,7 @@ export function MarkdownViewer({ content, className }: MarkdownViewerProps) {
 
     // Process markdown when content changes
     useEffect(() => {
-        console.log('Markdown processing useEffect triggered:', {
-            isMounted,
-            contentLength: content?.length || 0,
-            contentPreview: content?.substring(0, 100) + '...'
-        });
-
         if (isMounted) {
-            console.log('Processing markdown...');
             const html = processMarkdown();
             console.log('Markdown processing completed, setting processedHtml');
             setProcessedHtml(html);
