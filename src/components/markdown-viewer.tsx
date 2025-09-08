@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useCallback } from "react";
 import { Card } from "./ui/card";
-import { cn } from "../lib/utils";
+import { cn, replaceForLatext } from "../lib/utils";
 import mermaid from "mermaid";
 import { Marked, Renderer, type Tokens } from 'marked';
 import { usePanZoom } from '../hooks/use-pan-zoom';
@@ -53,6 +53,7 @@ const createMarkedInstance = (customRenderer: any) => {
         }
     );
     instance.use(markedKatex(options));
+    //instance.use(extendedLatex());
     return instance;
 };
 
@@ -68,67 +69,26 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
         pedantic: false
     });
     inlineMarked.use(markedKatex(options));
+
+
     renderer.paragraph = function (text: Tokens.Paragraph): string {
         const textContent = String(text.raw || text);
-          const result = inlineMarked.parseInline(textContent);
+        const level_exp = replaceForLatext(textContent);
+        const result = inlineMarked.parseInline(level_exp);
         return `<p class="custom-paragraph">${result}</p>`;
     }
 
-    // Override only the methods we need to customize
+    // Override only the methods we need to customize - normally this is thje title
     renderer.text = function (text: Tokens.Text | Tokens.Escape) {
         const textContent = String(text.text || text);
         let processedText = textContent;
-
-        // Convert LaTeX inline math delimiters \( \) to $ $ only if found in pairs
-        const inlineMathRegex = /\\\([^\\]*?\\\)/g;
-        const inlineMatches = processedText.match(inlineMathRegex);
-        if (inlineMatches) {
-            processedText = processedText.replace(inlineMathRegex, (match) => {
-                // Remove the \( and \) delimiters and wrap with $ $
-                const content = match.slice(2, -2); // Remove \( and \)
-                console.log('Converting inline math:', match, 'to', `$${content}$`);
-                return `$${content}$`;
-            });
-        }
-
-        // Convert LaTeX block math delimiters \[ \] to $$ $$ only if found in pairs
-        const blockMathRegex = /\\\[[\s\S]*?\\\]/g;
-        const blockMatches = processedText.match(blockMathRegex);
-        if (blockMatches) {
-            processedText = processedText.replace(blockMathRegex, (match) => {
-                // Remove the \[ and \] delimiters and wrap with $$ $$
-                const content = match.slice(2, -2); // Remove \[ and \]
-                console.log('Converting block math:', match, 'to', `$$${content}$$`);
-                return `$$${content}$$`;
-            });
-        }
-
-        // Check if any conversions were made
-        if (processedText !== textContent) {
-            console.log('Converted LaTeX delimiters:', {
-                original: textContent,
-                converted: processedText,
-                inlinePairs: inlineMatches?.length || 0,
-                blockPairs: blockMatches?.length || 0
-            });
-        }
-
-        // Check for math expressions (both original and converted)
-        const dollarRegex = /\$[^$]+\$/g;
-        const doubleDollarRegex = /\$\$[\s\S]*?\$\$/g;
-
-        if (dollarRegex.test(processedText) || doubleDollarRegex.test(processedText)) {
-            console.log('Found math expression in text:', processedText);
-            return processedText; // Return text with math expressions for MathJax
-        }
-
         return processedText; // Default behavior for other text
     };
 
     renderer.list = function (list: Tokens.List): string {
         const type = list.ordered ? 'ol' : 'ul';
         const startAttr = list.ordered && list.start !== 1 ? ` start="${list.start}"` : '';
-        return `<${type}${startAttr} class="custom-list">\n${list.items.map(item => this.listitem(item)).join('')}</${type}>\n`;
+        return `<${type}${startAttr} class="custom-list">${list.items.map(item => this.listitem(item)).join('')}</${type}>`;
     };
 
     renderer.listitem = function (item: Tokens.ListItem): string {
@@ -136,15 +96,16 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
         // we need to manually parse the text content
         let processedContent = '';
         if (item.text) {
-            console.log('Manually parsing list item text:', item.text);
+            const sample_context = item.text;
             try {
+                const level_exp = replaceForLatext(sample_context);
                 // Parse the text as inline content to get proper tokenization
-                const result = inlineMarked.parseInline(item.text);
-                processedContent = typeof result === 'string' ? result : item.text;
-                console.log('Inline parsing result:', processedContent);
+                const result = inlineMarked.parseInline(level_exp);
+                processedContent = typeof result === 'string' ? result : level_exp;
             } catch (parseError) {
                 console.log('Inline parsing failed, using raw text:', parseError);
-                processedContent = item.text;
+                // Still apply escaping even if parsing fails
+                processedContent = replaceForLatext(sample_context);
             }
         } else if (item.tokens && item.tokens.length > 0) {
             // If we somehow have tokens, process them

@@ -87,30 +87,24 @@ export function isCompressedContent(content: string): boolean {
 export function getShareableUrl(content: string, baseUrl?: string): string {
   // Use provided baseUrl or get from window.location
   const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
-  
   if (content.length < 200) {
     // For very short content, use raw content
     return `${origin}?content=${encodeURIComponent(content)}`;
   }
-  
   // For longer content, compress it with gzip
   const compressed = compressContent(content);
   const compressionRatio = ((content.length - compressed.length) / content.length * 100).toFixed(1);
-  
   console.log(`Content compressed: ${content.length} → ${compressed.length} chars (${compressionRatio}% reduction)`);
-  
   return `${origin}?content=${encodeURIComponent(compressed)}`;
 }
 
 // Validate if content parameter should be processed
 export function shouldProcessContentParam(contentParam: string | null): boolean {
   if (!contentParam) return false;
-  
   // If it's already compressed, decompress it
   if (isCompressedContent(contentParam)) {
     return true;
   }
-  
   // If it's raw content and too long, we should compress it
   return contentParam.length < 2000; // Allow raw content up to 2000 chars
 }
