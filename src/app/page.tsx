@@ -424,7 +424,7 @@ export default function HomePage({ onNavigate, contentToLoad, fileToLoad, onCont
           "bg-background border-primary/20",
         )}
       >
-        <div className="mx-auto container flex h-16 items-center px-4">
+        <div className="mx-auto container flex h-11 items-center px-4">
           <div className="flex items-center gap-2 mr-4">
             <FileText
               className={cn(
@@ -626,6 +626,20 @@ export default function HomePage({ onNavigate, contentToLoad, fileToLoad, onCont
           <DialogFooter>
             <DialogClose asChild>
               <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    if (lastSharedUrl) {
+                      const content = `[ref. doc](${lastSharedUrl})`;
+                      navigator.clipboard.writeText(content);
+                      toast.success("Markdown link is copied to clipboard!");
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Share MD LINK
+                </Button>
+
                 <Button
                   onClick={() => {
                     if (lastSharedUrl) {

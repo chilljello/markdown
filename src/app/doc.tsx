@@ -266,12 +266,12 @@ export default function DocPage({ onNavigate }: DocPageProps) {
       <Layout>
       {/* Header */}
       <header className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-1 py-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-8">
               <FileText className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold">Drawer</h1>
+                <h2 className="text-2xl font-bold">Achive</h2>
                 <p className="text-sm text-muted-foreground">Manage and edit your markdown documents</p>
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function DocPage({ onNavigate }: DocPageProps) {
               <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => onNavigate?.('home')}>
                 <FileText className="h-4 w-4 mr-2" />
-                Home
+                View
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowSettingsDialog(true)}>
                 <Settings className="h-4 w-4 mr-2" />

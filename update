@@ -58,5 +58,6 @@ check_need_cmd() {
     exit
   fi
 }
+bun run build
 pub_ver
 git_update
