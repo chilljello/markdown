@@ -23,7 +23,7 @@ const options: MarkedKatexOptions = {
     throwOnError: true,
     output: "mathml",
     displayMode: true,
-    minRuleThickness: 0.2,
+    minRuleThickness: 0.15,
     maxExpand: 900,
     maxSize: 100000,
     nonStandard: true, // Allow non-standard LaTeX commands
@@ -52,7 +52,7 @@ const createMarkedInstance = (customRenderer: any) => {
             pedantic: false
         }
     );
-    
+
     instance.use(markedKatex(options));
     //instance.use(extendedLatex());
     return instance;
@@ -100,8 +100,31 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
             const sample_context = item.text;
             try {
                 const level_exp = replaceForLatext(sample_context);
-                // Parse the text as inline content to get proper tokenization
-                const result = inlineMarked.parseInline(level_exp);
+
+                // Create a temporary marked instance with code highlighting for inline parsing
+                const tempMarked = new Marked(
+                    markedHighlight({
+                        emptyLangClass: 'hljs',
+                        langPrefix: 'hljs language-',
+                        highlight(code, lang, info) {
+                            // Skip highlighting for mermaid diagrams
+                            if (lang === 'mermaid') {
+                                return code;
+                            }
+                            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                            return hljs.highlight(code, { language }).value;
+                        }
+                    }),
+                    {
+                        breaks: true,
+                        gfm: true,
+                        pedantic: false
+                    }
+                );
+                tempMarked.use(markedKatex(options));
+
+                // Parse the text as inline content to get proper tokenization with code highlighting
+                const result = tempMarked.parseInline(level_exp);
                 processedContent = typeof result === 'string' ? result : level_exp;
             } catch (parseError) {
                 console.log('Inline parsing failed, using raw text:', parseError);

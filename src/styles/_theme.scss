@@ -965,13 +965,6 @@ textarea:focus {
 
 }
 
-.dark .mermaid {
-  background: rgb(53, 88, 53);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-
-
-}
-
 // Mermaid Wrapper Styles
 .mermaid-wrapper {
   position: relative;
@@ -1004,7 +997,14 @@ textarea:focus {
     padding: 0;
     display: block;
   }
+}
 
+.dark .mermaid {
+  background: rgb(53, 88, 53);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  .cluster rect{
+    fill: #7f7f59 !important;
+  }
 }
 
 .dark .mermaid-wrapper {

@@ -267,12 +267,8 @@ export default function HomePage({ onNavigate, contentToLoad, fileToLoad, onCont
     navigator.clipboard
       .writeText(shareableUrl)
       .then(() => {
-        console.log("Shareable URL copied to clipboard:", shareableUrl);
-        console.log("Compression stats:", stats);
-
         // Store the last shared URL for display
         setLastSharedUrl(shareableUrl);
-
         // Show success toast with compression info
         if (stats.shouldCompress) {
           toast.success("URL copied!", {
