@@ -76,7 +76,7 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
         const textContent = String(text.raw || text);
         const level_exp = replaceForLatext(textContent);
         const result = inlineMarked.parseInline(level_exp);
-        return `<p class="custom-paragraph">${result}</p>`;
+        return `<p class="story">${result}</p>`;
     }
 
     // Override only the methods we need to customize - normally this is thje title
@@ -89,7 +89,7 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
     renderer.list = function (list: Tokens.List): string {
         const type = list.ordered ? 'ol' : 'ul';
         const startAttr = list.ordered && list.start !== 1 ? ` start="${list.start}"` : '';
-        return `<${type}${startAttr} class="custom-list">${list.items.map(item => this.listitem(item)).join('')}</${type}>`;
+        return `<${type}${startAttr} class="L1">${list.items.map(item => this.listitem(item)).join('')}</${type}>`;
     };
 
     renderer.listitem = function (item: Tokens.ListItem): string {
@@ -140,7 +140,7 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
             }).join('');
         }
 
-        return `<li class="custom-list-item">${processedContent}</li>\n`;
+        return `<li class="L1i">${processedContent}</li>\n`;
     };
 
     // Enhanced strong/bold text renderer for filename-description format
@@ -160,6 +160,7 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
 
         // Use default code rendering for other languages
         return this.constructor.prototype.code.call(this, code);
+        //return `<pre><code class="hljs ${code.lang ? 'language-' + code.lang : ''}">${hljs.highlightAuto(code.text || String(code)).value}</code></pre>`;
     };
 
     return renderer;

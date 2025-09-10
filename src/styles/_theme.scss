@@ -105,10 +105,14 @@
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
+  --table-th: #9ddc7b;
+  --table-row: #d4f5d4;
 }
 
 // Dark theme
 .dark {
+  --table-th: #499322;
+  --table-row: #4c5b4c;
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
@@ -653,6 +657,56 @@ textarea:focus {
     }
   }
 
+  // Custom list item decorations with book emoji
+  ul li,
+  ol li {
+    position: relative;
+    list-style: none;
+    padding-left: 1.5em;
+
+    &::before {
+      content: "📖";
+      position: absolute;
+      left: -.195em;
+      top: 0;
+      font-size: 0.9em;
+      line-height: 1.5;
+      color: var(--primary);
+    }
+  }
+
+  // Override default list styles for markdown body
+  ul {
+    list-style: none;
+  }
+
+  ol {
+    list-style: none;
+    counter-reset: item;
+
+    li {
+      counter-increment: item;
+
+      &::before {
+        content: counter(item) ".";
+        position: absolute;
+        left: -.25em;
+        top: 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        font-weight: 600;
+        color: var(--primary);
+      }
+    }
+
+    li>code {
+      font-weight: 600;
+      background-color: rgb(178, 178, 178);
+      color: rgb(239, 239, 239);
+      border-radius: 0;
+    }
+  }
+
   // Tables
   table {
     border-collapse: collapse;
@@ -667,13 +721,14 @@ textarea:focus {
     }
 
     th {
-      background-color: var(--muted);
+      background-color: var(--table-th);
       font-weight: 600;
     }
 
     tr:nth-child(even) {
-      background-color: var(--muted);
+      background-color: var(--table-row);
     }
+
   }
 
   // Horizontal rule
@@ -927,11 +982,11 @@ textarea:focus {
   }
 
   table th {
-    background-color: var(--muted);
+    background-color: var(--table-th);
   }
 
   table tr:nth-child(even) {
-    background-color: var(--muted);
+    background-color: var(--table-row);
   }
 
   .success,
@@ -941,6 +996,14 @@ textarea:focus {
     background-color: var(--success);
     border-color: var(--success);
   }
+
+  li>code {
+    font-weight: 600;
+    background-color: rgb(91, 154, 194);
+    color: black;
+    border-radius: 0;
+  }
+
 }
 
 // =============================================================================
@@ -1001,14 +1064,14 @@ textarea:focus {
 
 .dark .mermaid {
   background: rgb(53, 88, 53);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  .cluster rect{
-    fill: #7f7f59 !important;
-  }
 }
 
 .dark .mermaid-wrapper {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  .cluster rect {
+    fill: #7f7f59 !important;
+  }
 
   &:hover,
   &.hover {
