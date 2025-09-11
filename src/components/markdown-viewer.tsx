@@ -71,6 +71,27 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
     });
     inlineMarked.use(markedKatex(options));
 
+    // Create a temporary marked instance with code highlighting for inline parsing
+    const tempMarked = new Marked(
+        markedHighlight({
+            emptyLangClass: 'hljs',
+            langPrefix: 'hljs language-',
+            highlight(code, lang, info) {
+                // Skip highlighting for mermaid diagrams
+                if (lang === 'mermaid') {
+                    return code;
+                }
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            }
+        }),
+        {
+            breaks: true,
+            gfm: true,
+            pedantic: false
+        }
+    );
+    tempMarked.use(markedKatex(options));
 
     renderer.paragraph = function (text: Tokens.Paragraph): string {
         const textContent = String(text.raw || text);
@@ -100,29 +121,6 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
             const sample_context = item.text;
             try {
                 const level_exp = replaceForLatext(sample_context);
-
-                // Create a temporary marked instance with code highlighting for inline parsing
-                const tempMarked = new Marked(
-                    markedHighlight({
-                        emptyLangClass: 'hljs',
-                        langPrefix: 'hljs language-',
-                        highlight(code, lang, info) {
-                            // Skip highlighting for mermaid diagrams
-                            if (lang === 'mermaid') {
-                                return code;
-                            }
-                            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                            return hljs.highlight(code, { language }).value;
-                        }
-                    }),
-                    {
-                        breaks: true,
-                        gfm: true,
-                        pedantic: false
-                    }
-                );
-                tempMarked.use(markedKatex(options));
-
                 // Parse the text as inline content to get proper tokenization with code highlighting
                 const result = tempMarked.parseInline(level_exp);
                 processedContent = typeof result === 'string' ? result : level_exp;
@@ -144,13 +142,13 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
     };
 
     // Enhanced strong/bold text renderer for filename-description format
-    renderer.strong = function (text: any) {
+    renderer.strong = function (text: Tokens.Strong): string {
         const textContent = String(text.text || text);
         // Default strong rendering for ALL other cases (any text with **)
         return `<strong>${textContent}</strong>`;
     };
 
-    renderer.code = function (code: any) {
+    renderer.code = function (code: Tokens.Code): string {
         if (code.lang === 'mermaid') {
             const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
             const codeString = typeof code === 'string' ? code : code.text || String(code);
@@ -162,7 +160,13 @@ const createCustomRenderer = (sanitizeMermaidCode: (code: string) => string): an
         return this.constructor.prototype.code.call(this, code);
         //return `<pre><code class="hljs ${code.lang ? 'language-' + code.lang : ''}">${hljs.highlightAuto(code.text || String(code)).value}</code></pre>`;
     };
-
+    renderer.tablecell = function (cell: Tokens.TableCell): string {
+        const tag = cell.header ? 'th' : 'td';
+        const sample_context = cell.text;
+        const level_exp = replaceForLatext(sample_context);
+        const result = tempMarked.parseInline(level_exp);
+        return `<${tag} class="L2c">${result}</${tag}>`;
+    };
     return renderer;
 };
 
